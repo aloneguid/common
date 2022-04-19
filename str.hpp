@@ -21,24 +21,23 @@ namespace str
       return strTo;
    }
 
-   /*template<class T>
-   static inline bool contains(const std::basic_string<T>& haystack, const std::basic_string<T>& needle)
+   // trim from start (in place)
+   static inline void ltrim(std::string& s)
    {
-       return haystack.find(needle) != std::string::npos;
+      s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch)
+                                      {
+                                         return !std::isspace(ch);
+                                      }));
    }
 
-   template<class T>
-   static inline std::basic_string<T> lower(const std::basic_string<T>& str)
+   // trim from end (in place)
+   static inline void rtrim(std::string& s)
    {
-       basic_string<T> result(str);
-       std::transform(result.begin(), result.end(), result.begin(), ::lower);
+      s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch)
+                           {
+                              return !std::isspace(ch);
+                           }).base(), s.end());
    }
-
-   template<class T>
-   static inline bool ci_contains(const std::basic_string<T>& haystack, const std::basic_string<T>& needle)
-   {
-       return lower(haystack).find(lower(needle)) != std::string::npos;
-   }*/
 
 
    /// <summary>
@@ -68,9 +67,23 @@ namespace str
       return found_substring;
    }
 
-   template<class T>
-   static bool test(std::basic_string<T> s)
+   static inline std::vector<std::string> split(const std::string& str,
+                                                const std::string& delimiter)
    {
-      return s.empty();
+       std::vector<std::string> strings;
+
+       std::string::size_type pos = 0;
+       std::string::size_type prev = 0;
+       while ((pos = str.find(delimiter, prev)) != std::string::npos)
+       {
+           strings.push_back(str.substr(prev, pos - prev));
+           prev = pos + 1;
+       }
+
+       // To get the last substring (or only, if delimiter is not found)
+       strings.push_back(str.substr(prev));
+
+       return strings;
    }
+
 }
