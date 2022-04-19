@@ -1,8 +1,8 @@
 #include <iostream>
 #include "app_insights.h"
-#include "../../common/util.h"
 #include "../win32/http.h"
 #include <fmt/core.h>
+#include "../time.h"
 
 using namespace std;
 
@@ -51,7 +51,7 @@ namespace azure
       std::map<std::string, std::string> props)
    {
       string body(json_1);
-      body += util::to_iso_8601();
+      body += times::to_iso_8601();
       body += json_2;
       body += name;
       body += json_3;
