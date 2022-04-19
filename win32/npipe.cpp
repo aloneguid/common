@@ -1,6 +1,5 @@
 #include "npipe.h"
-#include "../../common/util.h"
-#include "../../common/str.hpp"
+#include "../str.hpp"
 #include <iostream>
 #include <vector>
 
