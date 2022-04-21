@@ -86,4 +86,13 @@ namespace str
        return strings;
    }
 
+   static inline std::string to_human_readable_size(unsigned long size)
+   {
+      int i{};
+      double mantissa = size;
+      for (; mantissa >= 1024.; mantissa /= 1024., ++i) {}
+      mantissa = std::ceil(mantissa * 10.) / 10.;
+      return std::to_string(mantissa) + "BKMGTPE"[i];
+   }
+
 }
