@@ -1,4 +1,5 @@
 #include <string>
+#include <vector>
 #include <windows.h>
 
 namespace str
@@ -22,21 +23,27 @@ namespace str
    }
 
    // trim from start (in place)
-   static inline void ltrim(std::string& s)
+   static inline void ltrim(std::string& s, unsigned char ch = ' ')
    {
-      s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch)
+      s.erase(s.begin(), std::find_if(s.begin(), s.end(), [ch](unsigned char ch1)
                                       {
-                                         return !std::isspace(ch);
+                                         return ch != ch1;
                                       }));
    }
 
    // trim from end (in place)
-   static inline void rtrim(std::string& s)
+   static inline void rtrim(std::string& s, unsigned char ch = ' ')
    {
-      s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch)
+      s.erase(std::find_if(s.rbegin(), s.rend(), [ch](unsigned char ch1)
                            {
-                              return !std::isspace(ch);
+                              return ch != ch1;
                            }).base(), s.end());
+   }
+
+   static inline void trim(std::string& s, unsigned char ch = ' ')
+   {
+      ltrim(s, ch);
+      rtrim(s, ch);
    }
 
 
