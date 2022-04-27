@@ -1,7 +1,7 @@
 #include "http.h"
 #include <vector>
 #include <iterator>
-#include "../../common/str.hpp"
+#include "../../common/str.h"
 
 //#pragma comment(lib, "winhttp.lib")
 

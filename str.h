@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <vector>
 #include <sstream>
 
 namespace str
@@ -13,6 +14,8 @@ namespace str
    void rtrim(std::string& s, unsigned char ch = ' ');
 
    void trim(std::string& s, unsigned char ch = ' ');
+
+   void replace_all(std::string& s, const std::string& search, const std::string& replacement);
 
    std::vector<std::string> split(const std::string& str, const std::string& delimiter);
 

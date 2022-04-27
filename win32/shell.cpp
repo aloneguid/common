@@ -2,7 +2,7 @@
 #include <ShlObj_core.h>
 #include <shellapi.h>
 #include <filesystem>
-#include "../../common/str.hpp"
+#include "../../common/str.h"
 
 using namespace std;
 namespace fs = std::filesystem;

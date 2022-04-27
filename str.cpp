@@ -4,6 +4,7 @@
 #include <cmath>
 #include <sstream>
 #include <regex>
+#include "str.h"
 
 using namespace std;
 
@@ -28,7 +29,7 @@ namespace str
    }
 
    // trim from start (in place)
-   void ltrim(std::string& s, unsigned char ch = ' ')
+   void ltrim(std::string& s, unsigned char ch)
    {
       s.erase(s.begin(), std::find_if(s.begin(), s.end(), [ch](unsigned char ch1)
                                       {
@@ -37,7 +38,7 @@ namespace str
    }
 
    // trim from end (in place)
-   void rtrim(std::string& s, unsigned char ch = ' ')
+   void rtrim(std::string& s, unsigned char ch)
    {
       s.erase(std::find_if(s.rbegin(), s.rend(), [ch](unsigned char ch1)
                            {
@@ -45,7 +46,7 @@ namespace str
                            }).base(), s.end());
    }
 
-   void trim(std::string& s, unsigned char ch = ' ')
+   void trim(std::string& s, unsigned char ch)
    {
       ltrim(s, ch);
       rtrim(s, ch);
@@ -125,4 +126,15 @@ namespace str
 
       return "";
    }
+
+   void replace_all(std::string& s, const std::string& search, const std::string& replacement)
+   {
+      std::string::size_type n = 0;
+      while ((n = s.find(search, n)) != std::string::npos)
+      {
+         s.replace(n, s.size(), replacement);
+         n += replacement.size();
+      }
+   }
+
 }

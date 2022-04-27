@@ -1,7 +1,8 @@
 #include "fss.h"
 #include <Windows.h>
-#include "str.hpp"
+#include "str.h"
 #include <fstream>
+#include <vector>
 
 using namespace std;
 

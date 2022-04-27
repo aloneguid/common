@@ -1,5 +1,5 @@
 #include "npipe.h"
-#include "../str.hpp"
+#include "../str.h"
 #include <iostream>
 #include <vector>
 
