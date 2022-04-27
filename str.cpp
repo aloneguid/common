@@ -1,10 +1,15 @@
 #include <string>
 #include <vector>
 #include <windows.h>
+#include <cmath>
+#include <sstream>
+#include <regex>
+
+using namespace std;
 
 namespace str
 {
-   static std::wstring to_wstr(const std::string& str)
+   std::wstring to_wstr(const std::string& str)
    {
       if (str.empty()) return std::wstring();
       int size_needed = ::MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), nullptr, 0);
@@ -13,7 +18,7 @@ namespace str
       return wstrTo;
    }
 
-   static std::string to_str(const std::wstring& wstr)
+   std::string to_str(const std::wstring& wstr)
    {
       if (wstr.empty()) return std::string();
       int size_needed = ::WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), nullptr, 0, nullptr, nullptr);
@@ -23,7 +28,7 @@ namespace str
    }
 
    // trim from start (in place)
-   static inline void ltrim(std::string& s, unsigned char ch = ' ')
+   void ltrim(std::string& s, unsigned char ch = ' ')
    {
       s.erase(s.begin(), std::find_if(s.begin(), s.end(), [ch](unsigned char ch1)
                                       {
@@ -32,7 +37,7 @@ namespace str
    }
 
    // trim from end (in place)
-   static inline void rtrim(std::string& s, unsigned char ch = ' ')
+   void rtrim(std::string& s, unsigned char ch = ' ')
    {
       s.erase(std::find_if(s.rbegin(), s.rend(), [ch](unsigned char ch1)
                            {
@@ -40,7 +45,7 @@ namespace str
                            }).base(), s.end());
    }
 
-   static inline void trim(std::string& s, unsigned char ch = ' ')
+   void trim(std::string& s, unsigned char ch = ' ')
    {
       ltrim(s, ch);
       rtrim(s, ch);
@@ -55,7 +60,7 @@ namespace str
    /// <param name="replecament"></param>
    /// <returns></returns>
    template<class T>
-   static inline bool replace_all(std::basic_string<T>& str, const std::basic_string<T>& target, const std::basic_string<T>& replacement)
+   bool replace_all(std::basic_string<T>& str, const std::basic_string<T>& target, const std::basic_string<T>& replacement)
    {
       if (target.empty())
       {
@@ -74,7 +79,7 @@ namespace str
       return found_substring;
    }
 
-   static inline std::vector<std::string> split(const std::string& str,
+   std::vector<std::string> split(const std::string& str,
                                                 const std::string& delimiter)
    {
        std::vector<std::string> strings;
@@ -93,13 +98,31 @@ namespace str
        return strings;
    }
 
-   static inline std::string to_human_readable_size(unsigned long size)
+   std::string to_human_readable_size(unsigned long size)
    {
       int i{};
       double mantissa = size;
       for (; mantissa >= 1024.; mantissa /= 1024., ++i) {}
-      mantissa = std::ceil(mantissa * 10.) / 10.;
-      return std::to_string(mantissa) + "BKMGTPE"[i];
+
+      //mantissa = std::ceil(mantissa * 10.) / 10.;
+      //return std::to_string(mantissa) + "BKMGTPE"[i];
+
+      ostringstream out;
+      out.precision(2);
+      out << std::fixed << mantissa;
+      return out.str() + "BKMGTPE"[i];
    }
 
+   std::string get_domain_from_url(const std::string& url)
+   {
+      regex r("https?:\\/\\/(www\\.)?([-a-zA-Z0-9@:%._\\+~#=]{1,256})");
+      smatch sm;
+      // group 2 is the domain
+      if (regex_search(url, sm, r) && sm.size() == 3)
+      {
+         return sm[2].str();
+      }
+
+      return "";
+   }
 }

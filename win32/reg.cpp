@@ -1,7 +1,7 @@
 #include "reg.h"
 #include <windows.h>
 #include <vector>
-#include "../str.hpp"
+#include "../str.h"
 
 using namespace std;
 
