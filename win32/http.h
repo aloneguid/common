@@ -5,6 +5,9 @@
 
 namespace win32
 {
+   /// <summary>
+   /// Uses WinHTTP. This is useful if you want as little dependencies as possible in your executable.
+   /// </summary>
    class http
    {
    public:
@@ -13,7 +16,7 @@ namespace win32
 
       std::string get(const std::string& domain, const std::string& url);
 
-      void post(const std::string& domain, const std::string& url, const std::string& data);
+      void post(const std::string& domain, const std::string& url, const std::string& data, bool is_async = false);
 
    private:
       HINTERNET hSession{ 0 };

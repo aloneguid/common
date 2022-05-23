@@ -3,6 +3,7 @@
 #include "../win32/http.h"
 #include <fmt/core.h>
 #include "../datetime.h"
+#include "../str.h"
 
 using namespace std;
 
@@ -10,7 +11,11 @@ namespace azure
 {
    void app_insights::http_post(const string& json_body)
    {
+      //datetime::measure m;
       h.post("dc.services.visualstudio.com", "/v2/track", json_body);
+      //long long ms = m.take();
+
+      //cout << "ai post: " << ms << "ms" << endl;
    }
 
 
@@ -36,13 +41,15 @@ namespace azure
       const std::string& prop1_name, const std::string& prop1_value,
       const std::string& prop2_name, const std::string& prop2_value,
       const std::string& prop3_name, const std::string& prop3_value,
-      const std::string& prop4_name, const std::string& prop4_value)
+      const std::string& prop4_name, const std::string& prop4_value,
+      const std::string& prop5_name, const std::string& prop5_value)
    {
       map<string, string> params;
       if (!prop1_name.empty()) params[prop1_name] = prop1_value;
       if (!prop2_name.empty()) params[prop2_name] = prop2_value;
       if (!prop3_name.empty()) params[prop3_name] = prop3_value;
       if (!prop4_name.empty()) params[prop4_name] = prop4_value;
+      if (!prop5_name.empty()) params[prop5_name] = prop5_value;
       track_event(name, params);
    }
 
@@ -60,7 +67,10 @@ namespace azure
       {
          if (!pair.first.empty())
          {
-            body += fmt::format(", \"{}\": \"{}\"", pair.first, pair.second);
+            string value = pair.second;
+            str::replace_all(value, "\\", "\\\\");
+
+            body += fmt::format(", \"{}\": \"{}\"", pair.first, value);
          }
       }
       body += json_4;

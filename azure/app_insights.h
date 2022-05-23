@@ -19,7 +19,8 @@ namespace azure
            const std::string& prop1_name = "", const std::string& prop1_value = "",
            const std::string& prop2_name = "", const std::string& prop2_value = "",
            const std::string& prop3_name = "", const std::string& prop3_value = "",
-           const std::string& prop4_name = "", const std::string& prop4_value = "");
+           const std::string& prop4_name = "", const std::string& prop4_value = "",
+           const std::string& prop5_name = "", const std::string& prop5_value = "");
 
     private:
         std::string json_1;

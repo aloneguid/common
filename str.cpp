@@ -132,7 +132,7 @@ namespace str
       std::string::size_type n = 0;
       while ((n = s.find(search, n)) != std::string::npos)
       {
-         s.replace(n, s.size(), replacement);
+         s.replace(n, search.size(), replacement);
          n += replacement.size();
       }
    }

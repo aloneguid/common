@@ -5,4 +5,26 @@
 namespace datetime
 {
    std::string to_iso_8601(std::chrono::time_point<std::chrono::system_clock> t = std::chrono::system_clock::now());
+
+   /// <summary>
+   /// Really simple time measure utility.
+   /// Starts measuring time when constructed. To 
+   /// </summary>
+   class measure
+   {
+   public:
+      measure();
+      ~measure();
+
+      /// <summary>
+      /// Stops measurement and returns number of milliseconds it took.
+      /// </summary>
+      long long take();
+
+
+   private:
+      std::chrono::steady_clock::time_point start_time;
+      std::chrono::steady_clock::time_point end_time;
+      std::chrono::nanoseconds duration;
+   };
 }

@@ -1,6 +1,9 @@
 #include "datetime.h"
 #include <iomanip>
 
+using namespace std;
+using namespace std::chrono;
+
 namespace datetime
 {
    std::string to_iso_8601(std::chrono::time_point<std::chrono::system_clock> t)
@@ -29,5 +32,21 @@ namespace datetime
       stream << "." << std::fixed << std::setw(6) << std::setfill('0') << delta_us;
 
       return stream.str();
+   }
+
+   measure::measure()
+   {
+      start_time = std::chrono::high_resolution_clock::now();
+   }
+
+   measure::~measure()
+   {
+   }
+
+   long long measure::take()
+   {
+      end_time = std::chrono::high_resolution_clock::now();
+      duration = end_time - start_time;
+      return duration_cast<milliseconds>(duration).count();
    }
 }
