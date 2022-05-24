@@ -15,6 +15,10 @@ namespace str
 
    void trim(std::string& s, unsigned char ch = ' ');
 
+   void upper(std::string& s);
+
+   void lower(std::string& s);
+
    void replace_all(std::string& s, const std::string& search, const std::string& replacement);
 
    std::vector<std::string> split(const std::string& str, const std::string& delimiter);
@@ -36,8 +40,7 @@ namespace str
    }
    std::string to_human_readable_size(unsigned long size);
 
+   std::vector<std::string> match_all_regex(const std::string& expression, const std::string& input);
+
    std::string get_domain_from_url(const std::string& url);
-
-
-
 }

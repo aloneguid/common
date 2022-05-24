@@ -4,6 +4,7 @@
 #include <cmath>
 #include <sstream>
 #include <regex>
+#include <algorithm>
 #include "str.h"
 
 using namespace std;
@@ -52,6 +53,15 @@ namespace str
       rtrim(s, ch);
    }
 
+   void upper(std::string& s)
+   {
+      transform(s.begin(), s.end(), s.begin(), ::toupper);
+   }
+
+   void lower(std::string& s)
+   {
+      transform(s.begin(), s.end(), s.begin(), ::tolower);
+   }
 
    /// <summary>
    /// Replaces (in-place) all occurances of target with replacement. Taken from : http://stackoverflow.com/questions/3418231/c-replace-part-of-a-string-with-another-string.
@@ -112,6 +122,23 @@ namespace str
       out.precision(2);
       out << std::fixed << mantissa;
       return out.str() + "BKMGTPE"[i];
+   }
+
+   std::vector<std::string> match_all_regex(const std::string& expression, const std::string& input)
+   {
+      regex r(expression);
+      vector<string> result;
+      string source = input;
+
+      smatch sm;
+      while (regex_search(source, sm, r))
+      {
+         result.push_back(sm.str());
+
+         source = sm.suffix();
+      }
+
+      return result;
    }
 
    std::string get_domain_from_url(const std::string& url)
