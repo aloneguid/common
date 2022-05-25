@@ -55,4 +55,13 @@ namespace fss
       return string(bytes.data(), sz);
    }
 
+   void write_file_as_string(const std::string& filename, const std::string& content)
+   {
+      ofstream ofs(filename, ios::out | ios::binary | ios::ate);
+      if (!ofs) return;
+
+      ofs << content;
+      ofs.flush();
+   }
+
 }
