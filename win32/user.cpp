@@ -91,4 +91,21 @@ namespace win32::user
       return ::GetAsyncKeyState(VK_SHIFT);
    }
 
+   void set_clipboard_data(const std::string& text)
+   {
+      if (!::OpenClipboard(nullptr)) return;
+      if (!::EmptyClipboard()) return;
+      HGLOBAL gh = ::GlobalAlloc(GMEM_MOVEABLE, text.size() + 1);
+      if (!gh)
+      {
+         ::CloseClipboard();
+         return;
+      }
+      memcpy(::GlobalLock(gh), text.c_str(), text.size() + 1);
+      ::GlobalUnlock(gh);
+      ::SetClipboardData(CF_TEXT, gh);
+      ::CloseClipboard();
+      ::GlobalFree(gh);
+   }
+
 }

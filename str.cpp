@@ -63,6 +63,15 @@ namespace str
       transform(s.begin(), s.end(), s.begin(), ::tolower);
    }
 
+   void unescape_special_chars(std::string& s)
+   {
+      replace_all(s, "\\r", "\r");
+      replace_all(s, "\\t", "\t");
+      replace_all(s, "\\b", "\b");
+      replace_all(s, "\\n", "\n");
+      replace_all(s, "\\f", "\f");
+   }
+
    /// <summary>
    /// Replaces (in-place) all occurances of target with replacement. Taken from : http://stackoverflow.com/questions/3418231/c-replace-part-of-a-string-with-another-string.
    /// </summary>
@@ -104,7 +113,7 @@ namespace str
        }
 
        // To get the last substring (or only, if delimiter is not found)
-       strings.push_back(str.substr(prev));
+       strings.push_back(prev >= str.size() ? "" : str.substr(prev));
 
        return strings;
    }
