@@ -5,6 +5,16 @@ namespace win32
 {
    namespace shell
    {
+      struct shell_link
+      {
+         bool is_valid{ false };
+         std::string path;
+         std::string args;
+         std::string icon;
+         std::string pwd;
+         std::string description;
+      };
+
       std::string get_local_app_data_path();
 
       void exec(const std::string& path, const std::string& parameters);
@@ -18,6 +28,8 @@ namespace win32
       void open_mssettings(const std::string name);
 
       void open_default_apps();
+
+      shell_link read_link(const std::string& path);
 
       void add_shell_notify_icon();
 

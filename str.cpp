@@ -29,6 +29,11 @@ namespace str
       return strTo;
    }
 
+   int to_int(const std::string& str)
+   {
+      return atoi(str.c_str());
+   }
+
    // trim from start (in place)
    void ltrim(std::string& s, unsigned char ch)
    {

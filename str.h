@@ -9,6 +9,8 @@ namespace str
 
    std::string to_str(const std::wstring& wstr);
 
+   int to_int(const std::string& str);
+
    void ltrim(std::string& s, unsigned char ch = ' ');
 
    void rtrim(std::string& s, unsigned char ch = ' ');
