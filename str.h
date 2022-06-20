@@ -11,11 +11,11 @@ namespace str
 
    int to_int(const std::string& str);
 
-   void ltrim(std::string& s, unsigned char ch = ' ');
+   void ltrim(std::string& s, const std::string& chars = " \r\n\t");
 
-   void rtrim(std::string& s, unsigned char ch = ' ');
+   void rtrim(std::string& s, const std::string& chars = " \r\n\t");
 
-   void trim(std::string& s, unsigned char ch = ' ');
+   void trim(std::string& s, const std::string& chars = " \r\n\t");
 
    void upper(std::string& s);
 

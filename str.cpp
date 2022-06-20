@@ -35,27 +35,31 @@ namespace str
    }
 
    // trim from start (in place)
-   void ltrim(std::string& s, unsigned char ch)
+   void ltrim(std::string& s, const string& chars)
    {
-      s.erase(s.begin(), std::find_if(s.begin(), s.end(), [ch](unsigned char ch1)
-                                      {
-                                         return ch != ch1;
-                                      }));
+      while (s.size() > 0)
+      {
+         size_t idx = chars.find(s[0]);
+         if (idx == string::npos) return;
+         s.erase(0, 1);
+      }
    }
 
    // trim from end (in place)
-   void rtrim(std::string& s, unsigned char ch)
+   void rtrim(std::string& s, const string& chars)
    {
-      s.erase(std::find_if(s.rbegin(), s.rend(), [ch](unsigned char ch1)
-                           {
-                              return ch != ch1;
-                           }).base(), s.end());
+      while (s.size() > 0)
+      {
+         size_t idx = chars.find(*(s.rbegin()));
+         if (idx == string::npos) return;
+         s.erase(s.size() - 1, 1);
+      }
    }
 
-   void trim(std::string& s, unsigned char ch)
+   void trim(std::string& s, const string& chars)
    {
-      ltrim(s, ch);
-      rtrim(s, ch);
+      ltrim(s, chars);
+      rtrim(s, chars);
    }
 
    void upper(std::string& s)
