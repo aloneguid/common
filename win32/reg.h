@@ -36,6 +36,11 @@ namespace win32
 
       void set_value(hive h,
          const std::string& path,
+         int32_t value,
+         const std::string& value_name = "");
+
+      void set_value(hive h,
+         const std::string& path,
          const std::vector<std::string>& value,
          const std::string& value_name = "");
    }

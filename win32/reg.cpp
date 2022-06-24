@@ -304,6 +304,30 @@ namespace win32
          }
       }
 
+      void set_value(hive h, const std::string& path, int32_t value, const std::string& value_name)
+      {
+         HKEY hKey;
+         LSTATUS lResult = ::RegCreateKeyEx(to_hkey(h),
+            str::to_wstr(path).c_str(),
+            0, nullptr, 0,
+            KEY_ALL_ACCESS,
+            nullptr,
+            &hKey,
+            nullptr);
+
+
+         if (lResult == ERROR_SUCCESS)
+         {
+            lResult = ::RegSetValueEx(hKey,
+               str::to_wstr(value_name).c_str(),
+               0, REG_DWORD,
+               reinterpret_cast<const BYTE*>(&value),
+               sizeof(int32_t));
+
+            ::RegCloseKey(hKey);
+         }
+      }
+
       void set_value(hive h, const std::string& path, const std::vector<std::string>& value, const std::string& value_name)
       {
          HKEY hKey;
