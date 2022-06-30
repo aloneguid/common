@@ -47,4 +47,6 @@ namespace str
    std::vector<std::string> match_all_regex(const std::string& expression, const std::string& input);
 
    std::string get_domain_from_url(const std::string& url);
+
+   std::string humanise(int value, std::string singular, std::string plural = "", std::string once = "", std::string twice = "");
 }

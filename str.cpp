@@ -182,4 +182,28 @@ namespace str
       }
    }
 
+   std::string humanise(int value, string singular, string plural, string once, string twice)
+   {
+      if(value == 1 && !once.empty())
+      {
+         return once;
+      }
+
+      if (value == 2 && !twice.empty())
+      {
+         return twice;
+      }
+
+      string r = std::to_string(value);
+      bool is_singular = r.ends_with('1');
+      r += "";
+
+      r += singular;
+      if (!is_singular)
+      {
+         r += "s";
+      }
+      return r;
+   }
+
 }
