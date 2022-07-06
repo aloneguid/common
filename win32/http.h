@@ -14,9 +14,9 @@ namespace win32
       http();
       ~http();
 
-      std::string get(const std::string& domain, const std::string& url);
+      std::string get(const std::string& domain, const std::string& url) const;
 
-      void post(const std::string& domain, const std::string& url, const std::string& data, bool is_async = false);
+      void post(const std::string& domain, const std::string& url, const std::string& data, bool is_async = false) const;
 
    private:
       HINTERNET hSession{ 0 };

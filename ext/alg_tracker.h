@@ -10,7 +10,7 @@ namespace alg
    public:
       tracker(const std::string& app_name, const std::string& version);
 
-      void track(std::map<std::string, std::string> props);
+      void track(const std::map<std::string, std::string>& props) const;
 
    private:
       win32::http h;

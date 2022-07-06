@@ -27,7 +27,7 @@ namespace win32
       }
    }
 
-   std::string http::get(const std::string& domain, const std::string& url)
+   std::string http::get(const std::string& domain, const std::string& url) const
    {
       string result;
 
@@ -76,7 +76,7 @@ namespace win32
       return result;
    }
 
-   void http::post(const std::string& domain, const std::string& url, const std::string& data, bool is_async)
+   void http::post(const std::string& domain, const std::string& url, const std::string& data, bool is_async) const
    {
       // PUT example - https://docs.microsoft.com/en-us/windows/win32/api/winhttp/nf-winhttp-winhttpreceiveresponse?f1url=%3FappId%3DDev16IDEF1%26l%3DEN-US%26k%3Dk(WINHTTP%252FWinHttpReceiveResponse);k(WinHttpReceiveResponse);k(DevLang-C%252B%252B);k(TargetOS-Windows)%26rd%3Dtrue
 

@@ -12,10 +12,11 @@ namespace alg
       url += app_name;
    }
 
-   void tracker::track(std::map<std::string, std::string> props)
+   void tracker::track(const std::map<std::string, std::string>& props1) const
    {
       string body;
 
+      map<string, string> props = props1;
       props["version"] = version;
 
       for (const auto& pair : props)
