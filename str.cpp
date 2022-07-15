@@ -108,23 +108,24 @@ namespace str
       return found_substring;
    }
 
-   std::vector<std::string> split(const std::string& str,
-                                                const std::string& delimiter)
+   std::vector<std::string> split(const std::string& str, const std::string& delimiter, bool trim_lines)
    {
-       std::vector<std::string> strings;
+      std::vector<std::string> strings;
 
-       std::string::size_type pos = 0;
-       std::string::size_type prev = 0;
-       while ((pos = str.find(delimiter, prev)) != std::string::npos)
-       {
-           strings.push_back(str.substr(prev, pos - prev));
-           prev = pos + 1;
-       }
+      std::string::size_type pos = 0;
+      std::string::size_type prev = 0;
+      while ((pos = str.find(delimiter, prev)) != std::string::npos)
+      {
+         string el = str.substr(prev, pos - prev);
+         if (trim_lines) trim(el);
+         strings.push_back(el);
+         prev = pos + 1;
+      }
 
-       // To get the last substring (or only, if delimiter is not found)
-       strings.push_back(prev >= str.size() ? "" : str.substr(prev));
+      // To get the last substring (or only, if delimiter is not found)
+      strings.push_back(prev >= str.size() ? "" : str.substr(prev));
 
-       return strings;
+      return strings;
    }
 
    std::string to_human_readable_size(unsigned long size)
@@ -184,7 +185,7 @@ namespace str
 
    std::string humanise(int value, string singular, string plural, string once, string twice)
    {
-      if(value == 1 && !once.empty())
+      if (value == 1 && !once.empty())
       {
          return once;
       }

@@ -25,7 +25,7 @@ namespace str
 
    void replace_all(std::string& s, const std::string& search, const std::string& replacement);
 
-   std::vector<std::string> split(const std::string& str, const std::string& delimiter);
+   std::vector<std::string> split(const std::string& str, const std::string& delimiter, bool trim_lines = false);
 
    template<class ForwardIterator>
    std::string join(ForwardIterator begin, ForwardIterator end, const std::string& separator)
