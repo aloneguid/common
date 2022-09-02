@@ -7,6 +7,17 @@ namespace win32
 {
    using namespace std;
 
+   std::string kernel::get_last_error_text()
+   {
+      wchar_t err[256];
+      memset(err, 0, 256);
+      FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,
+         NULL,
+         GetLastError(),
+         MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), err, 255, NULL);
+      return str::to_str(wstring(err));
+   }
+
    std::string kernel::get_computer_name()
    {
       TCHAR buffer[MAX_COMPUTERNAME_LENGTH + 1];
@@ -76,7 +87,8 @@ namespace win32
 
    int kernel::create_process(const std::string& cmdline,
       std::string& std_out,
-      std::string& std_err)
+      std::string& std_err,
+      std::string& sys_error_text)
    {
       // https://docs.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-createprocessw
 
@@ -132,13 +144,16 @@ namespace win32
 
       if (created)
       {
+         ::WaitForSingleObject(pi.hProcess, INFINITE);
+
          // not closing the handles before reading from out pipes causes read to hang at the end
          ::CloseHandle(pi.hProcess);
          ::CloseHandle(pi.hThread);
 
-         ::CloseHandle(hStdErrWrite);  // not writing out ERR anything from here
-         ::CloseHandle(hStdOutWrite);  // not writing out OUT anything from here
-         ::CloseHandle(hStdInRead); // not reading from IN anything from here
+         // close sides of the pipes we are not using
+         ::CloseHandle(hStdErrWrite);
+         ::CloseHandle(hStdOutWrite);
+         ::CloseHandle(hStdInRead);
 
          std_out = pipe_read(hStdOutRead);
          std_err = pipe_read(hStdErrRead);
@@ -146,6 +161,10 @@ namespace win32
          DWORD exit_code{};
          ::GetExitCodeProcess(pi.hProcess, &exit_code);
          return static_cast<int>(exit_code);
+      }
+      else
+      {
+         sys_error_text = get_last_error_text();
       }
 
       return -3;
