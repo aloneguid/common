@@ -1,5 +1,6 @@
 #include "user.h"
 #include <WinUser.h>
+#include "../str.h"
 
 using namespace std;
 
@@ -8,17 +9,47 @@ using namespace std;
 // Version.lib is required to call ::GetFileVersionInfoSize etc.
 #pragma comment(lib, "Version.lib")
 
-namespace win32::user
-{
-    std::wstring load_string(HINSTANCE hInst, UINT id)
-    {
+namespace win32::user {
+    std::wstring load_string(HINSTANCE hInst, UINT id) {
         WCHAR szs[MAX_LOADSTRING];
         ::LoadString(hInst, id, szs, MAX_LOADSTRING);
         return wstring(szs);
     }
 
-    std::wstring load_version(bool full)
-    {
+    std::wstring get_file_version_info_string(
+        const std::string& module_path,
+        const std::string& string_name) {
+
+        wstring wmp = str::to_wstr(module_path);
+        DWORD v_size = ::GetFileVersionInfoSize(wmp.c_str(), nullptr);
+        unique_ptr<char[]> v_data(new char[v_size]);    // can be vector<char> as well
+
+        if (::GetFileVersionInfo(wmp.c_str(), 0, v_size, v_data.get())) {
+
+            struct LANGANDCODEPAGE {
+                WORD wLanguage;
+                WORD wCodePage;
+            } *lpTranslate;
+
+            UINT cbTranslate;
+            ::VerQueryValue(v_data.get(), L"\\VarFileInfo\\Translation", (LPVOID*)&lpTranslate, &cbTranslate);
+
+            wchar_t buffer[256];
+            swprintf_s(buffer, 
+                L"\\StringFileInfo\\%04x%04x\\%S",
+                lpTranslate[0].wLanguage, lpTranslate[0].wCodePage, string_name.c_str());
+            wchar_t* value;
+
+            UINT dwBytes;
+            if (::VerQueryValue(v_data.get(), buffer, (LPVOID*)&value, &dwBytes)) {
+                return wstring(value);
+            }
+        }
+
+        return L"";
+    }
+
+    std::wstring load_version(bool full) {
         wstring r;
 
         // get current module's filename
@@ -29,17 +60,13 @@ namespace win32::user
         DWORD verSize = ::GetFileVersionInfoSize(szVersionFile, &hVer);
         LPSTR verData = new char[verSize];
 
-        if (::GetFileVersionInfo(szVersionFile, hVer, verSize, verData))
-        {
+        if (::GetFileVersionInfo(szVersionFile, hVer, verSize, verData)) {
             LPBYTE lpBuffer = 0;
             UINT size = 0;
-            if (VerQueryValue(verData, L"\\", (VOID FAR * FAR*) & lpBuffer, &size))
-            {
-                if (size)
-                {
+            if (VerQueryValue(verData, L"\\", (VOID FAR * FAR*) & lpBuffer, &size)) {
+                if (size) {
                     VS_FIXEDFILEINFO* verInfo = (VS_FIXEDFILEINFO*)lpBuffer;
-                    if (verInfo->dwSignature == 0xfeef04bd)
-                    {
+                    if (verInfo->dwSignature == 0xfeef04bd) {
                         // Doesn't matter if you are on 32 bit or 64 bit,
                         // DWORD is always 32 bits, so first two revision numbers
                         // come from dwFileVersionMS, last two come from dwFileVersionLS
@@ -47,8 +74,7 @@ namespace win32::user
                         r = to_wstring((verInfo->dwFileVersionMS >> 16) & 0xffff) + L"." +
                             to_wstring((verInfo->dwFileVersionMS >> 0) & 0xffff);
 
-                        if (full)
-                        {
+                        if (full) {
                             r += L"." +
                                 to_wstring((verInfo->dwFileVersionLS >> 16) & 0xffff) + L"." +
                                 to_wstring((verInfo->dwFileVersionLS >> 0) & 0xffff);
@@ -64,8 +90,7 @@ namespace win32::user
 
     }
 
-    void set_window_pos(HWND hwnd, int x, int y, int width, int height)
-    {
+    void set_window_pos(HWND hwnd, int x, int y, int width, int height) {
         UINT flags{};
 
         if (x == -1 || y == -1) flags |= SWP_NOMOVE;
@@ -74,30 +99,25 @@ namespace win32::user
         ::SetWindowPos(hwnd, NULL, x, y, width, height, flags);
     }
 
-    bool is_kbd_ctrl_down()
-    {
+    bool is_kbd_ctrl_down() {
         // https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
 
         return ::GetAsyncKeyState(VK_CONTROL);
     }
 
-    bool is_kbd_alt_down()
-    {
+    bool is_kbd_alt_down() {
         return ::GetAsyncKeyState(VK_LMENU) || ::GetAsyncKeyState(VK_RMENU);
     }
 
-    bool is_kbd_shift_down()
-    {
+    bool is_kbd_shift_down() {
         return ::GetAsyncKeyState(VK_SHIFT);
     }
 
-    void set_clipboard_data(const std::string& text)
-    {
+    void set_clipboard_data(const std::string& text) {
         if (!::OpenClipboard(nullptr)) return;
         if (!::EmptyClipboard()) return;
         HGLOBAL gh = ::GlobalAlloc(GMEM_MOVEABLE, text.size() + 1);
-        if (!gh)
-        {
+        if (!gh) {
             ::CloseClipboard();
             return;
         }

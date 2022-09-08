@@ -47,7 +47,7 @@ namespace win32 {
         return std::make_shared<window>(owner);
     }
 
-    DWORD window::get_pid() {
+    DWORD window::get_pid() const {
         DWORD pid;
         if (::GetWindowThreadProcessId(hwnd, &pid)) return pid;
         
@@ -63,6 +63,7 @@ namespace win32 {
     void window::restore() { ::ShowWindow(hwnd, SW_RESTORE); }
 
     void window::minimize() { ::ShowWindow(hwnd, SW_MINIMIZE); }
+    //void window::minimize() { ::ShowWindow(hwnd, SW_SHOWMINIMIZED); }
 
     LONG window::get_styles() {
         return ::GetWindowLong(hwnd, GWL_STYLE);

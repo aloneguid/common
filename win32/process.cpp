@@ -7,6 +7,23 @@
 using namespace std;
 
 namespace win32 {
+
+    vector<process> process::enumerate() {
+        vector<process> r;
+
+        DWORD process_ids[1024], needed;
+        if (::EnumProcesses(process_ids, sizeof(process_ids), &needed)) {
+            int proc_count = needed / sizeof(DWORD);
+            for (int i = 0; i < proc_count; i++) {
+                auto process_id = process_ids[i];
+
+                r.emplace_back(process_id);
+            }
+        }
+
+        return r;
+    }
+
     std::string process::get_module_filename() {
 
         string r;
@@ -33,5 +50,37 @@ namespace win32 {
         }
 
         return mfn;
+    }
+
+    struct find_token {
+        HWND best_handle{ 0 };
+        DWORD process_id{ 0 };
+    };
+
+    BOOL CALLBACK FindMainWindowEnumWindowsProc(HWND hwnd, LPARAM lParam) {
+
+        find_token* t = (find_token*)lParam;
+
+        HWND owner = ::GetWindow(hwnd, GW_OWNER);
+        bool is_visible = ::IsWindowVisible(hwnd);
+        bool is_main_window = !owner && is_visible;
+
+        DWORD process_id;
+        ::GetWindowThreadProcessId(hwnd, &process_id);
+
+        if (process_id != t->process_id || !is_main_window)
+            return TRUE;
+
+        t->best_handle = hwnd;
+        return FALSE;
+    }
+
+    HWND process::find_main_window() {
+        find_token t;
+        t.process_id = pid;
+
+        ::EnumWindows(FindMainWindowEnumWindowsProc, (LPARAM)&t);
+
+        return t.best_handle;
     }
 }

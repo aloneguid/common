@@ -23,7 +23,7 @@ namespace win32 {
 
         std::shared_ptr<window> get_owner();
 
-        DWORD get_pid();
+        DWORD get_pid() const;
 
         std::string get_class_name();
 
@@ -35,6 +35,7 @@ namespace win32 {
 
         void restore();
 
+        // Minimize this window. Note that some windows like Task Manager (system app) do not respond to this.
         void minimize();
 
     private:
