@@ -52,7 +52,7 @@ namespace win32 {
         // pass "this" as window prop to retreive it later, because WndProc is a static function
         ::SetProp(hwnd, L"this", this);
 
-        ::ShowWindow(hwnd, SW_SHOWDEFAULT);
+        ::ShowWindow(hwnd, SW_HIDE);
     }
 
     app::~app() {

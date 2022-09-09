@@ -6,7 +6,9 @@
 #pragma comment(lib, "comctl32.lib")
 
 namespace win32 {
-    shell_notify_icon::shell_notify_icon(HWND hwnd) : hwnd{ hwnd } {
+    shell_notify_icon::shell_notify_icon(HWND hwnd, UINT callback_message) 
+        : hwnd{ hwnd }, callback_message{ callback_message } {
+
         ::CoCreateGuid(&icon_guid);
 
         // create icon
@@ -19,6 +21,7 @@ namespace win32 {
         nid.hWnd = hwnd;
         nid.uFlags = NIF_ICON | NIF_TIP | NIF_MESSAGE | NIF_SHOWTIP | NIF_GUID;
         nid.guidItem = icon_guid;
+        nid.uCallbackMessage = callback_message;
         //nid.uCallbackMessage = WMAPP_NOTIFYCALLBACK;
         ::LoadIconMetric(hModule, L"IDI_ICON1", LIM_SMALL, &nid.hIcon);
         //LoadString(g_hInst, IDS_TOOLTIP, nid.szTip, ARRAYSIZE(nid.szTip));
