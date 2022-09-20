@@ -10,8 +10,10 @@ namespace win32 {
         ::DestroyMenu(h_menu);
     }
 
-    void popup_menu::add(const std::string& title) {
-        ::InsertMenu(h_menu, -1, MF_BYPOSITION, next_id++, str::to_wstr(title).c_str());
+    void popup_menu::add(const std::string& id, const std::string& title) {
+        auto loword_wparam = next_id++;
+        loword_wparam_to_id[loword_wparam] = id;
+        ::InsertMenu(h_menu, -1, MF_BYPOSITION, loword_wparam, str::to_wstr(title).c_str());
         count += 1;
     }
 
@@ -26,6 +28,11 @@ namespace win32 {
         h_menu = ::CreatePopupMenu();
         count = 0;
         next_id = 0;
+        loword_wparam_to_id.clear();
+    }
+
+    std::string popup_menu::id_from_loword_wparam(int loword_wparam) {
+        return loword_wparam_to_id[loword_wparam];
     }
 
     void popup_menu::show() {

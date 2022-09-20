@@ -1,6 +1,7 @@
 #pragma once
 #include <Windows.h>
 #include <string>
+#include <map>
 
 namespace win32 {
     class popup_menu {
@@ -8,7 +9,7 @@ namespace win32 {
         popup_menu(HWND h_wnd_owner);
         ~popup_menu();
 
-        void add(const std::string& title);
+        void add(const std::string& id, const std::string& title);
         void separator();
 
         // Shows menu to the user.
@@ -18,10 +19,13 @@ namespace win32 {
         // Clears menu by recreating it in place
         void clear();
 
+        std::string id_from_loword_wparam(int loword_wparam);
+
     private:
         size_t count{ 0 };
         UINT_PTR next_id{ 0 };
         HMENU h_menu;
         HWND h_wnd_owner;
+        std::map<int, std::string> loword_wparam_to_id;
     };
 }

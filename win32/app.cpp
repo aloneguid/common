@@ -1,4 +1,7 @@
 #include "app.h"
+#include "../str.h"
+
+using namespace std;
 
 namespace win32 {
 
@@ -17,7 +20,10 @@ namespace win32 {
         return ::DefWindowProc(hWnd, msg, wParam, lParam);
     }
 
-    app::app() {
+    app::app(const string& class_name, const string& window_title) {
+
+        wstring w_class_name = str::to_wstr(class_name);
+
         wc = {
          sizeof(WNDCLASSEX),
          CS_CLASSDC,
@@ -29,7 +35,7 @@ namespace win32 {
          nullptr,
          nullptr,
          nullptr,
-         L"AppMsgReceiver",
+         w_class_name.c_str(),
          nullptr
         };
 
@@ -40,7 +46,7 @@ namespace win32 {
         DWORD dwExStyle = 0;
         hwnd = ::CreateWindowEx(dwExStyle,
             wc.lpszClassName,
-            L"Receiver",
+            str::to_wstr(window_title).c_str(),
             dwStyle,
             100, 100, 100, 50,
             nullptr, NULL, wc.hInstance,
@@ -56,6 +62,8 @@ namespace win32 {
     }
 
     app::~app() {
+        ::PostQuitMessage(0);
+        ::DestroyWindow(hwnd);
         ::UnregisterClass(wc.lpszClassName, wc.hInstance);
     }
 

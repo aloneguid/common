@@ -1,12 +1,13 @@
 #pragma once
 #include <Windows.h>
 #include <functional>
+#include <string>
 
 namespace win32 {
     // represents a minimal win32 app
     class app {
     public:
-        app();
+        app(const std::string& class_name = "AppMsgReceiver", const std::string& window_title = "Receiver");
         ~app();
 
         HWND get_hwnd() { return hwnd; }
