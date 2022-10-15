@@ -2,7 +2,8 @@
 #include "../str.h"
 
 namespace win32 {
-    popup_menu::popup_menu(HWND h_wnd_owner) : h_wnd_owner{ h_wnd_owner } {
+    popup_menu::popup_menu(HWND h_wnd_owner) 
+        : h_wnd_owner{ h_wnd_owner } {
         h_menu = ::CreatePopupMenu();
     }
 
@@ -13,7 +14,23 @@ namespace win32 {
     void popup_menu::add(const std::string& id, const std::string& title) {
         auto loword_wparam = next_id++;
         loword_wparam_to_id[loword_wparam] = id;
-        ::InsertMenu(h_menu, -1, MF_BYPOSITION, loword_wparam, str::to_wstr(title).c_str());
+        BOOL ok = ::InsertMenu(h_menu,
+            -1,
+            MF_BYPOSITION, 
+            loword_wparam,
+            str::to_wstr(title).c_str());
+
+        // note: to have icons, entire menu item needs to be owner drawn :(
+
+        /*MENUITEMINFO mii = {0};
+        mii.cbSize = sizeof(MENUITEMINFO);
+        mii.fMask = MIIM_STRING | MIIM_BITMAP;
+        auto wtitle = str::to_wstr(title);
+        mii.dwTypeData = (LPWSTR)(wtitle.c_str());
+        //mii.hbmpItem = (HBITMAP)::LoadIcon(NULL, MAKEINTRESOURCE("IDI_ICON_EXIT"));
+        mii.hbmpItem = ::LoadBitmap(h_inst, L"IDI_ICON1");
+        ::InsertMenuItem(h_menu, -1, TRUE, &mii);*/
+
         count += 1;
     }
 

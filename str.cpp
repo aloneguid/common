@@ -270,4 +270,24 @@ namespace str {
 
         return ret;
     }
+
+    size_t word_count(const std::string& sentence) {
+        size_t r = 0;
+
+        size_t wl = 0;
+        for (char ch : sentence) {
+            bool is_word_char = iscsym(ch);
+
+            if (is_word_char) {
+                wl += 1;
+            } else {
+                if (wl > 0) {
+                    r += 1;
+                    wl = 0;
+                }
+            }
+        }
+
+        return r;
+    }
 }

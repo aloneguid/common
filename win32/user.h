@@ -25,7 +25,5 @@ namespace win32::user
    bool is_kbd_ctrl_down();
    bool is_kbd_alt_down();
    bool is_kbd_shift_down();
-
-   void set_clipboard_data(const std::string& text);
 }
 

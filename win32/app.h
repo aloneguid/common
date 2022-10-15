@@ -12,6 +12,9 @@ namespace win32 {
 
         HWND get_hwnd() { return hwnd; }
 
+        // https://learn.microsoft.com/en-gb/windows/win32/api/winuser/nf-winuser-addclipboardformatlistener?redirectedfrom=MSDN
+        void add_clipboard_listener();
+
         // runs message loop until WM_QUIT
         void run() const;
 

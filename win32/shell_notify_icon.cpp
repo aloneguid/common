@@ -1,5 +1,7 @@
 #include "shell_notify_icon.h"
 #include <commctrl.h>
+#include <strsafe.h>
+#include "../str.h"
 
 // we need commctrl v6 for LoadIconMetric()
 #pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
@@ -22,9 +24,8 @@ namespace win32 {
         nid.uFlags = NIF_ICON | NIF_TIP | NIF_MESSAGE | NIF_SHOWTIP | NIF_GUID;
         nid.guidItem = icon_guid;
         nid.uCallbackMessage = callback_message;
-        //nid.uCallbackMessage = WMAPP_NOTIFYCALLBACK;
+        //::StringCchCopy(nid.szTip, ARRAYSIZE(nid.szTip), L"test tip");
         ::LoadIconMetric(hModule, L"IDI_ICON1", LIM_SMALL, &nid.hIcon);
-        //LoadString(g_hInst, IDS_TOOLTIP, nid.szTip, ARRAYSIZE(nid.szTip));
         ::Shell_NotifyIcon(NIM_ADD, &nid);
 
         nid.uVersion = NOTIFYICON_VERSION_4;
@@ -36,5 +37,13 @@ namespace win32 {
         nid.uFlags = NIF_GUID;
         nid.guidItem = icon_guid;
         ::Shell_NotifyIcon(NIM_DELETE, &nid);
+    }
+
+    void shell_notify_icon::set_tooptip(const std::string& text) {
+        NOTIFYICONDATA nid = { sizeof(nid) };
+        nid.uFlags = NIF_GUID | NIF_TIP;
+        nid.guidItem = icon_guid;
+        ::StringCchCopy(nid.szTip, ARRAYSIZE(nid.szTip), str::to_wstr(text).c_str());
+        ::Shell_NotifyIcon(NIM_MODIFY, &nid);
     }
 }

@@ -67,6 +67,10 @@ namespace win32 {
         ::UnregisterClass(wc.lpszClassName, wc.hInstance);
     }
 
+    void app::add_clipboard_listener() {
+        ::AddClipboardFormatListener(hwnd);
+	}
+
     void app::run() const {
         MSG msg;
         while (::GetMessage(&msg, nullptr, 0, 0)) {
