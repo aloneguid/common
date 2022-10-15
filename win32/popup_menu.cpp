@@ -11,12 +11,14 @@ namespace win32 {
         ::DestroyMenu(h_menu);
     }
 
-    void popup_menu::add(const std::string& id, const std::string& title) {
+    void popup_menu::add(const std::string& id, const std::string& title, bool disabled) {
         auto loword_wparam = next_id++;
         loword_wparam_to_id[loword_wparam] = id;
+        UINT flags = MF_BYPOSITION;
+        if (disabled) flags |= MF_DISABLED;
         BOOL ok = ::InsertMenu(h_menu,
             -1,
-            MF_BYPOSITION, 
+            flags, 
             loword_wparam,
             str::to_wstr(title).c_str());
 
