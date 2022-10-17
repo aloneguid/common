@@ -4,10 +4,11 @@
 namespace win32 {
     popup_menu::popup_menu(HWND h_wnd_owner) 
         : h_wnd_owner{ h_wnd_owner } {
-        h_menu = ::CreatePopupMenu();
+        clear();
     }
 
     popup_menu::~popup_menu() {
+        clear();
         ::DestroyMenu(h_menu);
     }
 
@@ -16,7 +17,7 @@ namespace win32 {
         loword_wparam_to_id[loword_wparam] = id;
         UINT flags = MF_BYPOSITION;
         if (disabled) flags |= MF_DISABLED;
-        BOOL ok = ::InsertMenu(h_menu,
+        BOOL ok = ::InsertMenu(*h_menu_nesting.rbegin(),
             -1,
             flags, 
             loword_wparam,
@@ -37,14 +38,26 @@ namespace win32 {
     }
 
     void popup_menu::separator() {
-        ::InsertMenu(h_menu, -1, MF_BYPOSITION | MF_SEPARATOR, 0, nullptr);
+        ::InsertMenu(*h_menu_nesting.rbegin(), -1, MF_BYPOSITION | MF_SEPARATOR, 0, nullptr);
+    }
+
+    void popup_menu::enter_submenu(const std::string& title) {
+        HMENU h_sub = ::CreatePopupMenu();
+        ::AppendMenu(*h_menu_nesting.rbegin(), MF_POPUP, (UINT)h_sub, str::to_wstr(title).c_str());
+        h_menu_nesting.push_back(h_sub);
+    }
+
+    void popup_menu::exit_submenu() {
+        if (h_menu_nesting.size() == 1) return;
+        h_menu_nesting.erase(h_menu_nesting.end() - 1);
     }
 
     void popup_menu::clear() {
-        if (count == 0) return;
-
-        ::DestroyMenu(h_menu);
+        for (int i = h_menu_nesting.size() - 1; i >= 0; i--) {
+            ::DestroyMenu(h_menu_nesting[i]);
+        }
         h_menu = ::CreatePopupMenu();
+        h_menu_nesting.push_back(h_menu);
         count = 0;
         next_id = 0;
         loword_wparam_to_id.clear();

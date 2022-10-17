@@ -2,6 +2,7 @@
 #include <Windows.h>
 #include <string>
 #include <map>
+#include <vector>
 
 namespace win32 {
     class popup_menu {
@@ -11,6 +12,8 @@ namespace win32 {
 
         void add(const std::string& id, const std::string& title, bool disabled = false);
         void separator();
+        void enter_submenu(const std::string& title);
+        void exit_submenu();
 
         // Shows menu to the user.
         // When an item is selected, owner window receives WM_COMMAND with LOWORD(wParam) set to WM_APP + item index.
@@ -27,5 +30,6 @@ namespace win32 {
         HMENU h_menu;
         HWND h_wnd_owner;
         std::map<int, std::string> loword_wparam_to_id;
+        std::vector<HMENU> h_menu_nesting;
     };
 }
