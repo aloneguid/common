@@ -288,6 +288,8 @@ namespace str {
             }
         }
 
+        if (wl > 0) r += 1;
+
         return r;
     }
 }
