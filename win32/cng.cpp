@@ -23,6 +23,10 @@ namespace win32 {
         return hash(s, BCRYPT_SHA256_ALGORITHM);
     }
 
+    std::string cng::sha512(const std::string& s) {
+        return hash(s, BCRYPT_SHA512_ALGORITHM);
+    }
+
     std::string cng::hash(const std::string& s, LPCWSTR pszAlgId) {
         string r;
 

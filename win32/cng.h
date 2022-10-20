@@ -10,6 +10,7 @@ namespace win32 {
     public:
         static std::string md5(const std::string& s);
         static std::string sha256(const std::string& s);
+        static std::string sha512(const std::string& s);
 
     private:
         static std::string hash(const std::string& s, LPCWSTR pszAlgId);
