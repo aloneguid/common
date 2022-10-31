@@ -3,7 +3,7 @@
 #include <iterator>
 #include "../../common/str.h"
 
-//#pragma comment(lib, "winhttp.lib")
+#pragma comment(lib, "winhttp.lib")
 
 using namespace std;
 
