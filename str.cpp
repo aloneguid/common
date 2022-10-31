@@ -300,4 +300,34 @@ namespace str {
         }
         return r;
     }
+
+    std::string strip_html(const std::string& s) {
+        const regex pattern("\\<.*?\\>");
+        return regex_replace(s, pattern, "");
+    }
+
+    string rgx_extract(const std::string& s, const std::string& expr) {
+        string r;
+        regex rgx(expr);
+        smatch sm;
+        string source = s;
+        while (regex_search(source, sm, rgx)) {
+            if (!r.empty()) r += "\n";
+            r += sm.str();
+            source = sm.suffix();
+        }
+        return r;
+    }
+
+    std::vector<std::string> rgx_extract_to_vec(const std::string& s, const std::string& expr) {
+        vector<string> r;
+        regex rgx(expr);
+        smatch sm;
+        string source = s;
+        while (regex_search(source, sm, rgx)) {
+            r.push_back(sm.str());
+            source = sm.suffix();
+        }
+        return r;
+    }
 }

@@ -57,4 +57,10 @@ namespace str {
     size_t word_count(const std::string& sentence);
 
     std::string remove_non_ascii(const std::string& s);
+
+    std::string strip_html(const std::string& s);
+
+    std::string rgx_extract(const std::string& s, const std::string& expr);
+
+    std::vector<std::string> rgx_extract_to_vec(const std::string& s, const std::string& expr);
 }
