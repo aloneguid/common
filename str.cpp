@@ -292,4 +292,12 @@ namespace str {
 
         return r;
     }
+
+    std::string remove_non_ascii(const std::string& s) {
+        string r;
+        for (unsigned char ch : s) {
+            if (ch >= 0 && ch <= 127) r += ch;
+        }
+        return r;
+    }
 }

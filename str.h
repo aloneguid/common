@@ -55,4 +55,6 @@ namespace str {
     std::string base64_decode(std::string const& encoded_string);
 
     size_t word_count(const std::string& sentence);
+
+    std::string remove_non_ascii(const std::string& s);
 }
