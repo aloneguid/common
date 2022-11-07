@@ -61,6 +61,14 @@ namespace str {
         transform(s.begin(), s.end(), s.begin(), ::tolower);
     }
 
+    void capitalize(std::string& s) {
+        for (int i = 0; i < s.length(); i++) {
+            s[i] = i == 0
+                ? ::toupper(s[i])
+                : ::tolower(s[i]);
+        }
+	}
+
     void unescape_special_chars(std::string& s) {
         replace_all(s, "\\r", "\r");
         replace_all(s, "\\t", "\t");

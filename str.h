@@ -20,6 +20,8 @@ namespace str {
 
     void lower(std::string& s);
 
+    void capitalize(std::string& s);
+
     void unescape_special_chars(std::string& s);
 
     void replace_all(std::string& s, const std::string& search, const std::string& replacement);
