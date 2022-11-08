@@ -1,5 +1,4 @@
 #include "clipboard.h"
-#include <Windows.h>
 #include <WinUser.h>
 #include "../str.h"
 
@@ -9,6 +8,10 @@ namespace win32 {
 
     // links:
     // - https://learn.microsoft.com/en-us/windows/win32/dataxchg/using-the-clipboard
+
+    clipboard::clipboard() {
+        ::RegisterClipboardFormat(L"FileNameW");
+    }
 
     void clipboard::set_ascii_text(const std::string& text) {
         if (!::OpenClipboard(nullptr)) return;
@@ -25,33 +28,20 @@ namespace win32 {
         ::GlobalFree(gh);
     }
 
-    std::string clipboard::get_ascii_text() {
-        if (!::IsClipboardFormatAvailable(CF_TEXT)) return "";
-        if (!OpenClipboard(nullptr)) return "";
-        string r;
-
-        HGLOBAL gh = ::GetClipboardData(CF_TEXT);
-        if (gh != NULL) {
-            LPSTR lpstr = (LPSTR)::GlobalLock(gh);
-            if (lpstr != NULL) {
-
-                r = lpstr;
-
-                ::GlobalUnlock(lpstr);
-            }
-        }
-
-        ::CloseClipboard();
-
-        return r;
+    std::string clipboard::get_text() {
+        return get_unicode_text(CF_UNICODETEXT);
     }
 
-    std::wstring clipboard::get_text() {
-        if (!::IsClipboardFormatAvailable(CF_UNICODETEXT)) return L"";
-        if (!OpenClipboard(nullptr)) return L"";
+    std::string clipboard::get_filename() {
+        return get_unicode_text(::RegisterClipboardFormat(L"FileNameW"));
+    }
+
+    std::string clipboard::get_unicode_text(UINT format) {
+        if (!::IsClipboardFormatAvailable(format)) return "";
+        if (!OpenClipboard(nullptr)) return "";
         wstring r;
 
-        HGLOBAL gh = ::GetClipboardData(CF_UNICODETEXT);
+        HGLOBAL gh = ::GetClipboardData(format);
         if (gh != NULL) {
             LPWSTR lpstr = (LPWSTR)::GlobalLock(gh);
             if (lpstr != NULL) {
@@ -64,6 +54,6 @@ namespace win32 {
 
         ::CloseClipboard();
 
-        return r;
+        return str::to_str(r);
     }
 }
