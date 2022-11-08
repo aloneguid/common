@@ -1,6 +1,7 @@
 #include "alg_tracker.h"
 #include "../str.h"
 #include "fmt/core.h"
+#include "datetime.h"
 
 using namespace std;
 
@@ -12,11 +13,12 @@ namespace alg
       url += app_name;
    }
 
-   void tracker::track(const std::map<std::string, std::string>& props1) const
+   void tracker::track(const std::map<std::string, std::string>& props1, bool flush_now)
    {
       string body;
 
       map<string, string> props = props1;
+      props["t"] = datetime::to_iso_8601() + "Z";
       props["version"] = version;
 
       for (const auto& pair : props)
@@ -33,7 +35,19 @@ namespace alg
 
       body = string("{") + body + "}";
 
+      queue.push_back(body);
 
-      h.post("alt.aloneguid.uk", url, body);
+      if (flush_now) flush();
+   }
+
+   void tracker::flush() {
+
+       string body{ "[" };
+       body += str::join(queue.begin(), queue.end(), ",");
+       body += "]";
+
+       h.post("alt.aloneguid.uk", url, body);
+
+       queue.clear();
    }
 }

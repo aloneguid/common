@@ -29,7 +29,7 @@ namespace fss
    size_t get_file_size(const std::string& name)
    {
       std::ifstream fl(name, std::ifstream::ate | std::ifstream::binary);
-      if (!fl) return 0;
+      if (!fl) return -1;
       return fl.tellg();
    }
 
