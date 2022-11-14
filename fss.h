@@ -7,6 +7,8 @@ namespace fss
 
    std::string get_current_exec_path();
 
+   bool file_exists(const std::string& name);
+
    size_t get_file_size(const std::string& name);
 
    bool read_binary_file(const std::string& name, unsigned char* buffer);
