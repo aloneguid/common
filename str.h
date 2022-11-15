@@ -65,4 +65,6 @@ namespace str {
     std::string rgx_extract(const std::string& s, const std::string& expr);
 
     std::vector<std::string> rgx_extract_to_vec(const std::string& s, const std::string& expr);
+
+    std::string deduplicate_lines(const std::string& s);
 }

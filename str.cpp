@@ -1,5 +1,6 @@
 #include <string>
 #include <vector>
+#include <map>
 #include <windows.h>
 #include <cmath>
 #include <sstream>
@@ -337,5 +338,21 @@ namespace str {
             source = sm.suffix();
         }
         return r;
+    }
+
+    std::string deduplicate_lines(const std::string& s) {
+        map<string, bool> rmap;
+        for (auto& l : split(s, "\n", true)) {
+            if (l.empty()) continue;
+            rmap[l] = true;
+        }
+
+        string r;
+        for (auto& p : rmap) {
+            if (!r.empty()) r += "\n";
+            r += p.first;
+        }
+        return r;
+
     }
 }
