@@ -13,6 +13,8 @@ namespace alg
 
       void track(const std::map<std::string, std::string>& props, bool flush_now);
 
+      void add_constant(std::string name, std::string value);
+
       void flush();
 
    private:
@@ -20,5 +22,6 @@ namespace alg
       std::string url;
       std::string version;
       std::vector<std::string> queue;
+      std::map<std::string, std::string> constants;
    };
 }

@@ -21,6 +21,12 @@ namespace alg
       props["t"] = datetime::to_iso_8601() + "Z";
       props["version"] = version;
 
+      if (!constants.empty()) {
+          for (const auto& pair : constants) {
+              props[pair.first] = pair.second;
+          }
+      }
+
       for (const auto& pair : props)
       {
          if (!pair.first.empty())
@@ -38,6 +44,10 @@ namespace alg
       queue.push_back(body);
 
       if (flush_now) flush();
+   }
+
+   void tracker::add_constant(std::string name, std::string value) {
+       constants[name] = value;
    }
 
    void tracker::flush() {

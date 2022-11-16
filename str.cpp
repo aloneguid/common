@@ -179,7 +179,7 @@ namespace str {
 
         string r = std::to_string(value);
         bool is_singular = r.ends_with('1');
-        r += "";
+        r += " ";
 
         r += singular;
         if (!is_singular) {
