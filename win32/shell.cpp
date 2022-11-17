@@ -178,5 +178,25 @@ namespace win32 {
 
             return lnk;
         }
+
+        //BOOL GetDpiMonitorEnumProc(
+        //    HMONITOR hMonitor,
+        //    HDC hDC,
+        //    LPRECT hRect,
+        //    LPARAM lParam) {
+
+        //    vector<HMONITOR>* hmons = (vector<HMONITOR>*)lParam;
+        //    hmons->push_back(hMonitor);
+        //    return true;
+        //}
+
+        unsigned int get_dpi() {
+            //vector<HMONITOR> hmons;
+            //::EnumDisplayMonitors(NULL, NULL, GetDpiMonitorEnumProc, (LPARAM)&hmons);
+
+            //if (monitor_idx >= hmons.size()) return 0;
+
+            return ::GetDpiForSystem();
+        }
     }
 }

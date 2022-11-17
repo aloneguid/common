@@ -27,5 +27,7 @@ namespace win32 {
         void open_default_apps();
 
         shell_link read_link(const std::string& path);
+
+        unsigned int get_dpi();
     }
 }
