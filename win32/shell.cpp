@@ -19,12 +19,11 @@ namespace win32 {
             co_initialised = true;
         }
 
-
-        string get_local_app_data_path() {
+        string get_shell_folder_path(int clsid) {
             TCHAR szPath[MAX_PATH];
 
-            if (SUCCEEDED(SHGetFolderPath(nullptr,
-                CSIDL_LOCAL_APPDATA,
+            if(SUCCEEDED(SHGetFolderPath(nullptr,
+                clsid,
                 nullptr,
                 0,
                 szPath))) {
@@ -32,6 +31,14 @@ namespace win32 {
             }
 
             return "";
+        }
+
+        string get_local_app_data_path() {
+            return get_shell_folder_path(CSIDL_LOCAL_APPDATA);
+        }
+
+        std::string get_app_data_folder() {
+            return get_shell_folder_path(CSIDL_APPDATA);
         }
 
         void exec(const std::string& path, const std::string& parameters) {

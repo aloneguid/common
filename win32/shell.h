@@ -12,7 +12,11 @@ namespace win32 {
             std::string description;
         };
 
+        // non-roaming app data
         std::string get_local_app_data_path();
+
+        // roaming app data
+        std::string get_app_data_folder();
 
         void exec(const std::string& path, const std::string& parameters);
 
