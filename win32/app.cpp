@@ -4,6 +4,13 @@
 using namespace std;
 
 namespace win32 {
+    void app::set_message_timeout(size_t milliseconds) {
+        if(milliseconds > 0) {
+            timeout_timer_id = ::SetTimer(NULL, NULL, milliseconds, NULL);
+        } else if(timeout_timer_id != 0) {
+            ::KillTimer(NULL, timeout_timer_id);
+        }
+    }
 
     LRESULT WINAPI win32::app::WndProc(
         HWND hWnd, UINT msg,
@@ -62,6 +69,9 @@ namespace win32 {
     }
 
     app::~app() {
+        if(timeout_timer_id != 0) {
+            ::KillTimer(NULL, timeout_timer_id);
+        }
         ::PostQuitMessage(0);
         ::DestroyWindow(hwnd);
         ::UnregisterClass(wc.lpszClassName, wc.hInstance);

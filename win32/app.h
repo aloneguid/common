@@ -24,9 +24,12 @@ namespace win32 {
         // called from message loop (run()) when any message arrives
         std::function<void(MSG&)> on_any_message;
 
+        void set_message_timeout(size_t milliseconds = -1);
+
     private:
         WNDCLASSEX wc;
         HWND hwnd{ nullptr };
+        UINT_PTR timeout_timer_id{0};
 
         static LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
     };

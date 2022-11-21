@@ -102,14 +102,14 @@ namespace win32::user {
     bool is_kbd_ctrl_down() {
         // https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
 
-        return ::GetAsyncKeyState(VK_CONTROL) & 0x01;
+        return ::GetKeyState(VK_CONTROL) & 0x8000;
     }
 
     bool is_kbd_alt_down() {
-        return (::GetAsyncKeyState(VK_LMENU) & 0x01) || (::GetAsyncKeyState(VK_RMENU) & 0x01);
+        return (::GetKeyState(VK_LMENU) & 0x8000) || (::GetKeyState(VK_RMENU) & 0x8000);
     }
 
     bool is_kbd_shift_down() {
-        return ::GetAsyncKeyState(VK_SHIFT) & 0x01;
+        return ::GetKeyState(VK_SHIFT) & 0x8000;
     }
 }
