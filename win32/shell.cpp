@@ -4,15 +4,18 @@
 #include <filesystem>
 #include "../../common/str.h"
 
+#include "CDialogEventHandler.hpp"
+
 using namespace std;
 namespace fs = std::filesystem;
 
 namespace win32 {
     namespace shell {
-        static bool co_initialised{ false };
+
+        static bool co_initialised{false};
 
         static void ensure_co_initalised() {
-            if (co_initialised) return;
+            if(co_initialised) return;
 
             HRESULT ok = ::CoInitializeEx(0, COINIT_MULTITHREADED);
 
@@ -50,7 +53,7 @@ namespace win32 {
                 nullptr,
                 SW_SHOWDEFAULT);
 
-            if (hi) {
+            if(hi) {
                 int i = 0;
             }
 
@@ -93,7 +96,7 @@ namespace win32 {
 
         void set_rounded_corners(HWND hWnd, int radius /*= 20*/) {
             RECT rect;
-            if (::GetWindowRect(hWnd, &rect)) {
+            if(::GetWindowRect(hWnd, &rect)) {
                 HRGN rgn = CreateRoundRectRgn(0, 0, rect.right - rect.left, rect.bottom - rect.top, radius, radius);
                 ::SetWindowRgn(hWnd, rgn, TRUE);
             }
@@ -141,40 +144,40 @@ namespace win32 {
             // create shell link interface
             IShellLink* shl;
             HRESULT rc = ::CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLink, (LPVOID*)&shl);
-            if (SUCCEEDED(rc)) {
+            if(SUCCEEDED(rc)) {
 
                 // load file into link
                 IPersistFile* ipf;
                 rc = shl->QueryInterface(IID_IPersistFile, (LPVOID*)&ipf);
-                if (SUCCEEDED(rc)) {
+                if(SUCCEEDED(rc)) {
                     wstring wpath = str::to_wstr(path);
                     rc = ipf->Load(wpath.c_str(), STGM_READ);
-                    if (SUCCEEDED(rc)) {
+                    if(SUCCEEDED(rc)) {
                         rc = shl->Resolve(0, 0);
-                        if (SUCCEEDED(rc)) {
+                        if(SUCCEEDED(rc)) {
                             int ibuf;
                             const size_t buf_size = 1024;
                             wchar_t buf[buf_size];
 
                             rc = shl->GetPath(&buf[0], buf_size, 0, SLGP_RAWPATH);
-                            if (SUCCEEDED(rc)) {
+                            if(SUCCEEDED(rc)) {
                                 lnk.is_valid = true;
                                 lnk.path = str::to_str(buf);
                             }
 
-                            if (SUCCEEDED(shl->GetDescription(buf, buf_size))) {
+                            if(SUCCEEDED(shl->GetDescription(buf, buf_size))) {
                                 lnk.description = str::to_str(buf);
                             }
 
-                            if (SUCCEEDED(shl->GetArguments(buf, buf_size))) {
+                            if(SUCCEEDED(shl->GetArguments(buf, buf_size))) {
                                 lnk.args = str::to_str(buf);
                             }
 
-                            if (SUCCEEDED(shl->GetIconLocation(buf, buf_size, &ibuf))) {
+                            if(SUCCEEDED(shl->GetIconLocation(buf, buf_size, &ibuf))) {
                                 lnk.icon = str::to_str(buf) + ":" + std::to_string(ibuf);
                             }
 
-                            if (SUCCEEDED(shl->GetWorkingDirectory(&buf[0], buf_size))) {
+                            if(SUCCEEDED(shl->GetWorkingDirectory(&buf[0], buf_size))) {
                                 lnk.pwd = str::to_str(buf);
                             }
                         }
@@ -204,6 +207,85 @@ namespace win32 {
             //if (monitor_idx >= hmons.size()) return 0;
 
             return ::GetDpiForSystem();
+        }
+
+        std::string file_open_dialog(const std::string& file_type_name, const std::string& extension) {
+            // see https://learn.microsoft.com/en-us/windows/win32/shell/common-file-dialog#basic-usage
+
+            string path;
+
+            IFileDialog* pfd = NULL;
+            HRESULT hr = ::CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pfd));
+            if(SUCCEEDED(hr)) {
+                // Create an event handling object, and hook it up to the dialog.
+                IFileDialogEvents* pfde = NULL;
+                hr = ::CDialogEventHandler_CreateInstance(IID_PPV_ARGS(&pfde));
+                if(SUCCEEDED(hr)) {
+                    // Hook up the event handler.
+                    DWORD dwCookie;
+                    hr = pfd->Advise(pfde, &dwCookie);
+                    if(SUCCEEDED(hr)) {
+                        // Set the options on the dialog.
+                        DWORD dwFlags;
+
+                        // Before setting, always get the options first in order 
+                        // not to override existing options.
+                        hr = pfd->GetOptions(&dwFlags);
+                        if(SUCCEEDED(hr)) {
+                            // In this case, get shell items only for file system items.
+                            hr = pfd->SetOptions(dwFlags | FOS_FORCEFILESYSTEM);
+                            if(SUCCEEDED(hr)) {
+                                // Set the file types to display only. 
+                                // Notice that this is a 1-based array.
+
+                                wstring flt_n = str::to_wstr(file_type_name);
+                                wstring flt_x = str::to_wstr(extension);
+                                COMDLG_FILTERSPEC rgSpec[] = {
+                                    { flt_n.c_str(), flt_x.c_str() }
+                                };
+
+                                hr = pfd->SetFileTypes(1, rgSpec);
+                                if(SUCCEEDED(hr)) {
+                                    // Set the selected file type index to Word Docs for this example.
+                                    hr = pfd->SetFileTypeIndex(1);
+                                    if(SUCCEEDED(hr)) {
+                                        // Set the default extension to be ".doc" file.
+                                        hr = pfd->SetDefaultExtension(flt_x.c_str());
+                                        if(SUCCEEDED(hr)) {
+                                            // Show the dialog
+                                            hr = pfd->Show(NULL);
+                                            if(SUCCEEDED(hr)) {
+                                                // Obtain the result once the user clicks 
+                                                // the 'Open' button.
+                                                // The result is an IShellItem object.
+                                                IShellItem* psiResult;
+                                                hr = pfd->GetResult(&psiResult);
+                                                if(SUCCEEDED(hr)) {
+                                                    // We are just going to print out the 
+                                                    // name of the file for sample sake.
+                                                    PWSTR pszFilePath = NULL;
+                                                    hr = psiResult->GetDisplayName(SIGDN_FILESYSPATH,
+                                                        &pszFilePath);
+                                                    if(SUCCEEDED(hr)) {
+                                                        // user have made a positive selection here
+                                                        path = str::to_str(pszFilePath);
+                                                        CoTaskMemFree(pszFilePath);
+                                                    }
+                                                    psiResult->Release();
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        // Unhook the event handler.
+                        pfd->Unadvise(dwCookie);
+                    }
+                }
+            }
+
+            return path;
         }
     }
 }

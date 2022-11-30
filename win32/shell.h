@@ -33,5 +33,7 @@ namespace win32 {
         shell_link read_link(const std::string& path);
 
         unsigned int get_dpi();
+
+        std::string file_open_dialog(const std::string& file_type_name, const std::string& extension);
     }
 }
