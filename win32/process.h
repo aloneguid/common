@@ -27,6 +27,8 @@ namespace win32 {
 
         process get_parent();
 
+        bool get_memory_info(uint64_t& working_set_bytes);
+
     private:
         DWORD pid;
     };

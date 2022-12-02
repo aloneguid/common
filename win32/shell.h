@@ -34,6 +34,8 @@ namespace win32 {
 
         unsigned int get_dpi();
 
+        unsigned int get_dpi(HWND hWnd);
+
         std::string file_open_dialog(const std::string& file_type_name, const std::string& extension);
     }
 }

@@ -131,7 +131,7 @@ namespace str {
         ostringstream out;
         out.precision(2);
         out << std::fixed << mantissa;
-        return out.str() + "BKMGTPE"[i];
+        return out.str() + " " + "BKMGTPE"[i];
     }
 
     std::vector<std::string> match_all_regex(const std::string& expression, const std::string& input) {

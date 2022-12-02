@@ -148,4 +148,20 @@ namespace win32 {
 
         return process{ 0 };
     }
+
+    bool process::get_memory_info(uint64_t& working_set_bytes) {
+        bool ok{false};
+        // see https://learn.microsoft.com/en-us/windows/win32/api/psapi/nf-psapi-getprocessmemoryinfo
+        HANDLE hProcess = ::OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
+        if(hProcess) {
+            PROCESS_MEMORY_COUNTERS pmc{0};
+            ::GetProcessMemoryInfo(hProcess, &pmc, sizeof(PROCESS_MEMORY_COUNTERS));
+            working_set_bytes = pmc.WorkingSetSize;
+
+            ::CloseHandle(hProcess);
+
+            ok = true;
+        }
+        return ok;
+    }
 }

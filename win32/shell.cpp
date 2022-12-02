@@ -209,6 +209,10 @@ namespace win32 {
             return ::GetDpiForSystem();
         }
 
+        unsigned int get_dpi(HWND hWnd) {
+            return ::GetDpiForWindow(hWnd);
+        }
+
         std::string file_open_dialog(const std::string& file_type_name, const std::string& extension) {
             // see https://learn.microsoft.com/en-us/windows/win32/shell/common-file-dialog#basic-usage
 
