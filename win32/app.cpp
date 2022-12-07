@@ -18,8 +18,8 @@ namespace win32 {
 
         // get "this"
         app* app_this = (app*)::GetProp(hWnd, L"this");
-        if (app_this && app_this->on_app_message) {
-            LRESULT res = app_this->on_app_message(msg, wParam, lParam);
+        if (app_this && app_this->on_app_window_message) {
+            LRESULT res = app_this->on_app_window_message(msg, wParam, lParam);
 
             return res == 0 ? ::DefWindowProc(hWnd, msg, wParam, lParam) : res;
         }
@@ -86,8 +86,8 @@ namespace win32 {
         while (::GetMessage(&msg, nullptr, 0, 0)) {
             ::TranslateMessage(&msg);
 
-            if (on_any_message) {
-                on_any_message(msg);
+            if (on_message_loop_message) {
+                on_message_loop_message(msg);
             }
 
             ::DispatchMessage(&msg);

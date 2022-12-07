@@ -21,6 +21,8 @@ namespace common {
 
         void commit();
 
+        std::string get_absolute_path() { return ini_path; }
+
     private:
         bool is_dirty{ false };
         std::string ini_path;

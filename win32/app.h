@@ -19,10 +19,10 @@ namespace win32 {
         void run() const;
 
         // called when an unhandled message arrives to this class' fake window
-        std::function<LRESULT(UINT, WPARAM, LPARAM)> on_app_message;
+        std::function<LRESULT(UINT, WPARAM, LPARAM)> on_app_window_message;
 
         // called from message loop (run()) when any message arrives
-        std::function<void(MSG&)> on_any_message;
+        std::function<void(MSG&)> on_message_loop_message;
 
         void set_message_timeout(size_t milliseconds = -1);
 
