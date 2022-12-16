@@ -3,10 +3,12 @@
 #include <Psapi.h>
 #include <winnt.h>
 #include <winternl.h>
+#include <chrono>
 
 #define MAX_STR 1024
 
 using namespace std;
+using namespace std::chrono;
 
 namespace win32 {
 
@@ -163,5 +165,28 @@ namespace win32 {
             ok = true;
         }
         return ok;
+    }
+
+    double process::get_uptime_sec() {
+        double r{0};
+        HANDLE hProcess = ::OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
+        if(hProcess) {
+            FILETIME creationTime, exitTime, kernelTime, userTime;
+            if(::GetProcessTimes(
+                hProcess, &creationTime, &exitTime, &kernelTime, &userTime)) {
+
+                // convert to time_point
+                file_clock::duration d{
+                    (static_cast<int64_t>(creationTime.dwHighDateTime) << 32) | creationTime.dwLowDateTime};
+                file_clock::time_point creation_time{d};
+
+                // get duration
+                auto uptime = file_clock::now() - creation_time;
+                auto uptime_sec = duration_cast<seconds>(uptime);
+                r = uptime_sec.count();
+            }
+            ::CloseHandle(hProcess);
+        }
+        return r;
     }
 }

@@ -29,6 +29,8 @@ namespace win32 {
 
         bool get_memory_info(uint64_t& working_set_bytes);
 
+        double get_uptime_sec();
+
     private:
         DWORD pid;
     };
