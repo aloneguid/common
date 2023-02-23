@@ -12,7 +12,8 @@ namespace win32 {
         : hwnd{ hwnd }, callback_message{ callback_message } {
 
         if(icon_guid == GUID_NULL)
-            ::CoCreateGuid(&icon_guid);
+            if(SUCCEEDED(::CoCreateGuid(&icon_guid)))
+                return;
 
         this->icon_guid = icon_guid;
 
@@ -25,11 +26,13 @@ namespace win32 {
         NOTIFYICONDATA nid = { sizeof(nid) };
         nid.hWnd = hwnd;
         nid.uFlags = NIF_ICON | NIF_TIP | NIF_MESSAGE | NIF_SHOWTIP | NIF_GUID;
-        nid.guidItem = icon_guid;
+        nid.guidItem = this->icon_guid;
         nid.uCallbackMessage = callback_message;
         //::StringCchCopy(nid.szTip, ARRAYSIZE(nid.szTip), L"test tip");
         ::LoadIconMetric(hModule, L"IDI_ICON1", LIM_SMALL, &nid.hIcon);
-        ::Shell_NotifyIcon(NIM_ADD, &nid);
+        if(!::Shell_NotifyIcon(NIM_ADD, &nid)) {
+            return;
+        }
 
         nid.uVersion = NOTIFYICON_VERSION_4;
         ::Shell_NotifyIcon(NIM_SETVERSION, &nid);
