@@ -8,10 +8,13 @@
 #pragma comment(lib, "comctl32.lib")
 
 namespace win32 {
-    shell_notify_icon::shell_notify_icon(HWND hwnd, UINT callback_message) 
+    shell_notify_icon::shell_notify_icon(HWND hwnd, GUID icon_guid, UINT callback_message) 
         : hwnd{ hwnd }, callback_message{ callback_message } {
 
-        ::CoCreateGuid(&icon_guid);
+        if(icon_guid == GUID_NULL)
+            ::CoCreateGuid(&icon_guid);
+
+        this->icon_guid = icon_guid;
 
         // create icon
         // https://www.codeproject.com/Articles/4768/Basic-use-of-Shell-NotifyIcon-in-Win32
