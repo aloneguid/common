@@ -12,7 +12,7 @@ namespace win32 {
         : hwnd{ hwnd }, callback_message{ callback_message } {
 
         if(icon_guid == GUID_NULL)
-            if(SUCCEEDED(::CoCreateGuid(&icon_guid)))
+            if(!SUCCEEDED(::CoCreateGuid(&icon_guid)))
                 return;
 
         this->icon_guid = icon_guid;
