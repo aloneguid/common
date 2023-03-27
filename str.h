@@ -10,6 +10,8 @@ namespace str {
 
     int to_int(const std::string& str);
 
+    long long to_long_long(const std::string& str);
+
     void ltrim(std::string& s, const std::string& chars = " \r\n\t");
 
     void rtrim(std::string& s, const std::string& chars = " \r\n\t");

@@ -16,6 +16,8 @@ namespace win32 {
 
         void set_tooptip(const std::string& text);
 
+        void display_notification(const std::string& title, const std::string& text);
+
 
     private:
         HWND hwnd;

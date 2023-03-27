@@ -85,12 +85,25 @@ namespace win32 {
         MSG msg;
         while (::GetMessage(&msg, nullptr, 0, 0)) {
             ::TranslateMessage(&msg);
+            ::DispatchMessage(&msg);
 
-            if (on_message_loop_message) {
+            if(on_message_loop_message) {
                 on_message_loop_message(msg);
             }
 
-            ::DispatchMessage(&msg);
+            while(max_fps_mode) {
+                while(::PeekMessage(&msg, nullptr, 0U, 0U, PM_REMOVE)) {
+                    ::TranslateMessage(&msg);
+                    ::DispatchMessage(&msg);
+
+                    if(on_message_loop_message) {
+                        on_message_loop_message(msg);
+                    }
+
+                    if(msg.message == WM_QUIT)
+                        return;
+                }
+            }
         }
     }
 }

@@ -2,6 +2,7 @@
 #include <commctrl.h>
 #include <strsafe.h>
 #include "../str.h"
+#include "kernel.h"
 
 // we need commctrl v6 for LoadIconMetric()
 #pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
@@ -47,9 +48,26 @@ namespace win32 {
 
     void shell_notify_icon::set_tooptip(const std::string& text) {
         NOTIFYICONDATA nid = { sizeof(nid) };
+        nid.cbSize = sizeof(NOTIFYICONDATA);
+        nid.hWnd = hwnd;
         nid.uFlags = NIF_GUID | NIF_TIP;
         nid.guidItem = icon_guid;
         ::StringCchCopy(nid.szTip, ARRAYSIZE(nid.szTip), str::to_wstr(text).c_str());
+        ::Shell_NotifyIcon(NIM_MODIFY, &nid);
+    }
+
+    void shell_notify_icon::display_notification(const std::string& title, const std::string& text) {
+
+        // Display a balloon notification. The szInfo, szInfoTitle, dwInfoFlags, and uTimeout members are valid.
+
+        NOTIFYICONDATA nid = {sizeof(nid)};
+        nid.cbSize = sizeof(NOTIFYICONDATA);
+        nid.hWnd = hwnd;
+        nid.uFlags = NIF_GUID | NIF_INFO;
+        nid.guidItem = icon_guid;
+        ::StringCchCopy(nid.szInfo, ARRAYSIZE(nid.szInfo), str::to_wstr(text).c_str());
+        ::StringCchCopy(nid.szInfoTitle, ARRAYSIZE(nid.szInfoTitle), str::to_wstr(title).c_str());
+        nid.dwInfoFlags = NIIF_INFO;
         ::Shell_NotifyIcon(NIM_MODIFY, &nid);
     }
 }

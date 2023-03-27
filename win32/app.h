@@ -26,10 +26,13 @@ namespace win32 {
 
         void set_message_timeout(size_t milliseconds = -1);
 
+        void set_max_fps_mode(bool v) { max_fps_mode = v; }
+
     private:
         WNDCLASSEX wc;
         HWND hwnd{ nullptr };
         UINT_PTR timeout_timer_id{0};
+        bool max_fps_mode{false};
 
         static LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
     };

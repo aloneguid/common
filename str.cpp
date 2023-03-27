@@ -31,6 +31,10 @@ namespace str {
         return atoi(str.c_str());
     }
 
+    long long to_long_long(const std::string& str) {
+        return atoll(str.c_str());
+    }
+
     // trim from start (in place)
     void ltrim(std::string& s, const string& chars) {
         while (s.size() > 0) {
