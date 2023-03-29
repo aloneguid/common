@@ -189,4 +189,12 @@ namespace win32 {
         }
         return r;
     }
+
+    bool process::terminate() {
+        HANDLE hProcess = ::OpenProcess(PROCESS_TERMINATE, FALSE, pid);
+        if (hProcess) {
+            return ::TerminateProcess(hProcess, 1);
+        }
+        return false;
+    }
 }

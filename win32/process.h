@@ -31,6 +31,8 @@ namespace win32 {
 
         double get_uptime_sec();
 
+        bool terminate();
+
     private:
         DWORD pid;
     };
