@@ -6,11 +6,14 @@
 #include <chrono>
 
 #define MAX_STR 1024
+#define STATUS_INFO_LENGTH_MISMATCH ((NTSTATUS)0xC0000004L)
 
 using namespace std;
 using namespace std::chrono;
 
 namespace win32 {
+
+    // interesting findings: https://github.com/RandomOS/taskmanager/blob/master/src/process.c
 
     typedef NTSTATUS(__stdcall* NTQUERYINFORMATIONPROCESS) (
         HANDLE ProcessHandle,
@@ -19,10 +22,32 @@ namespace win32 {
         ULONG ProcessInformationLength,
         PULONG ReturnLength);
 
-    HMODULE ntdll = GetModuleHandle(L"NTDLL.DLL");
+    typedef NTSTATUS(NTAPI* NtQuerySystemInformation)(
+        IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
+        OUT PVOID SystemInformation,
+        IN ULONG SystemInformationLength,
+        OUT PULONG ReturnLength);
 
+    HMODULE ntdll = ::GetModuleHandle(L"NTDLL.DLL");
+
+    // NtQueryInformationProcess
     NTQUERYINFORMATIONPROCESS ptrNtQueryInformationProcess =
         (NTQUERYINFORMATIONPROCESS)::GetProcAddress(ntdll, "NtQueryInformationProcess");
+
+    // NtQuerySystemInformation
+    NtQuerySystemInformation ptrNtQuerySystemInformation = (NtQuerySystemInformation)::GetProcAddress(
+        ntdll, "NtQuerySystemInformation");
+
+    // NtSuspendProcess / NtResumeProcess
+    typedef NTSTATUS(NTAPI* NtSuspendProcess)(IN HANDLE ProcessHandle);
+
+    typedef NTSTATUS(NTAPI* NtResumeProcess)(IN HANDLE ProcessHandle);
+
+    NtSuspendProcess ptrNtSuspendProcess = (NtSuspendProcess)::GetProcAddress(
+        ntdll, "NtSuspendProcess");
+
+    NtResumeProcess ptrNtResumeProcess = (NtResumeProcess)::GetProcAddress(
+        ntdll, "NtResumeProcess");
 
     process::process() : pid{ ::GetCurrentProcessId() } {
 
@@ -196,5 +221,64 @@ namespace win32 {
             return ::TerminateProcess(hProcess, 1);
         }
         return false;
+    }
+
+    bool process::suspend() {
+        HANDLE hProcess = ::OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+        NTSTATUS r = 0;
+        if (hProcess) {
+            r = ptrNtSuspendProcess(hProcess);
+            ::CloseHandle(hProcess);
+        }
+        return NT_SUCCESS(r);
+    }
+
+    bool process::resume() {
+        HANDLE hProcess = ::OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+        NTSTATUS r = 0;
+        if (hProcess) {
+            r = ptrNtResumeProcess(hProcess);
+            ::CloseHandle(hProcess);
+        }
+        return NT_SUCCESS(r);
+    }
+
+    bool process::is_suspended() {
+        vector<char> pBuffer;
+        size_t cbBuffer = 0x2800;
+        pBuffer.resize(cbBuffer);
+        NTSTATUS status{ 0 };
+        do
+        {
+            status = ptrNtQuerySystemInformation(SystemProcessInformation, &pBuffer[0], cbBuffer, NULL);
+            if (status == STATUS_INFO_LENGTH_MISMATCH) {
+                cbBuffer *= 2;
+                pBuffer.resize(cbBuffer);
+            }
+        } while (status == STATUS_INFO_LENGTH_MISMATCH);
+
+        if (!NT_SUCCESS(status)) return false;
+
+        PSYSTEM_PROCESS_INFORMATION p_info = (PSYSTEM_PROCESS_INFORMATION)&pBuffer[0];
+        bool r = false;
+
+        /*while (true) {
+            if (p_info->UniqueProcessId == (HANDLE)pid) {
+                r = p_info->NumberOfThreads != 0;
+                for (int i = 0; i < p_info->NumberOfThreads; i++) {
+                    p_info->thre
+                    if (p_info->Threads[i] != StateWait || p_info->Threads[i].WaitReason != Suspended) {
+                        r = false;
+                        break;
+                    }
+                }
+            }
+
+            if (p_info->NextEntryDelta == 0) break;
+
+            p_info = (PNT_SYSTEM_PROCESS_INFORMATION)(((PUCHAR)p_info) + p_info->NextEntryDelta);
+        }*/
+
+        return r;
     }
 }

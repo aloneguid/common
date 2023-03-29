@@ -33,6 +33,12 @@ namespace win32 {
 
         bool terminate();
 
+        bool suspend();
+
+        bool resume();
+
+        bool is_suspended();
+
     private:
         DWORD pid;
     };
