@@ -6,7 +6,7 @@
 namespace common {
     class config {
     public:
-        config(const std::string& name = "config.ini");
+        config(const std::string& path);
 
         std::string get_value(const std::string& key, const std::string& section = "");
         std::vector<std::string> get_all_values(const std::string& key, const std::string& section = "");

@@ -1,12 +1,19 @@
 #include "config.h"
 #include "../fss.h"
 #include <list>
+#include <filesystem>
 
 using namespace std;
+namespace fs = std::filesystem;
 
 namespace common {
-    config::config(const std::string& name) {
-        ini_path = fss::get_current_dir() + "/" + name;
+    config::config(const std::string& path) {
+        ini_path = path;
+
+        // create dir if not exists
+        fs::path abs{path};
+        fs::create_directories(abs.parent_path());
+
         ini.SetMultiKey(true);
         ini.LoadFile(ini_path.c_str());
     }
@@ -28,7 +35,8 @@ namespace common {
 
     void config::set_value(const std::string& key, const std::string& value, const std::string& section) {
         ini.Delete(section.c_str(), key.c_str());
-        ini.SetValue(section.c_str(), key.c_str(), value.c_str());
+        if(!value.empty())
+            ini.SetValue(section.c_str(), key.c_str(), value.c_str());
         is_dirty = true;
     }
 
