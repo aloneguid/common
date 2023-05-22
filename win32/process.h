@@ -31,8 +31,6 @@ namespace win32 {
 
         double get_uptime_sec();
 
-        double get_cpu_usage();
-
         bool terminate();
 
         bool suspend();
