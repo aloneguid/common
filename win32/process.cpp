@@ -4,6 +4,12 @@
 #include <winnt.h>
 #include <winternl.h>
 #include <chrono>
+#include "kernel.h"
+#include <Pdh.h>
+#include <PdhMsg.h>
+#include <fmt/core.h>
+
+#pragma comment(lib, "pdh.lib")
 
 #define MAX_STR 1024
 #define STATUS_INFO_LENGTH_MISMATCH ((NTSTATUS)0xC0000004L)
@@ -215,12 +221,39 @@ namespace win32 {
         return r;
     }
 
+    double process::get_cpu_usage() {
+
+        double cpu{-1.0};
+        HANDLE hProcess = ::OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
+        if(hProcess) {
+
+            FILETIME createTime, exitTime, kernelTime, userTime;
+            if(::GetProcessTimes(hProcess, &createTime, &exitTime, &kernelTime, &userTime)) {
+
+                ULONGLONG kernelTimeValue = (static_cast<ULONGLONG>(kernelTime.dwHighDateTime) << 32) | kernelTime.dwLowDateTime;
+                ULONGLONG userTimeValue = (static_cast<ULONGLONG>(userTime.dwHighDateTime) << 32) | userTime.dwLowDateTime;
+
+                FILETIME currentTime;
+                GetSystemTimeAsFileTime(&currentTime);
+                ULONGLONG currentTimeValue = (static_cast<ULONGLONG>(currentTime.dwHighDateTime) << 32) | currentTime.dwLowDateTime;
+
+                ULONGLONG elapsedTime = currentTimeValue - (static_cast<ULONGLONG>(createTime.dwHighDateTime) << 32) | createTime.dwLowDateTime;
+                cpu = ((kernelTimeValue + userTimeValue) / static_cast<double>(elapsedTime)) * 100.0;
+            }
+            ::CloseHandle(hProcess);
+        }
+
+        return cpu;
+    }
+
     bool process::terminate() {
         HANDLE hProcess = ::OpenProcess(PROCESS_TERMINATE, FALSE, pid);
+        bool ok = false;
         if (hProcess) {
-            return ::TerminateProcess(hProcess, 1);
+            ok = ::TerminateProcess(hProcess, 1);
+            ::CloseHandle(hProcess);
         }
-        return false;
+        return ok;
     }
 
     bool process::suspend() {

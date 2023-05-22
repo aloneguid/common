@@ -7,57 +7,53 @@ using namespace std;
 
 namespace alg
 {
-   tracker::tracker(const std::string& app_name, const std::string& version) : version{ version }
-   {
-      url = "/events?key=";
-      url += app_name;
-   }
+    tracker::tracker(const std::string& app_name, const std::string& version) : version{version} {
+        url = "/events?key=";
+        url += app_name;
+    }
 
-   void tracker::track(const std::map<std::string, std::string>& props1, bool flush_now)
-   {
-      string body;
+    void tracker::track(const std::map<std::string, std::string>& props1, bool flush_now) {
+        string body;
 
-      map<string, string> props = props1;
-      props["t"] = datetime::to_iso_8601() + "Z";
-      props["version"] = version;
+        map<string, string> props = props1;
+        props["t"] = datetime::to_iso_8601() + "Z";
+        props["version"] = version;
 
-      if (!constants.empty()) {
-          for (const auto& pair : constants) {
-              props[pair.first] = pair.second;
-          }
-      }
+        if(!constants.empty()) {
+            for(const auto& pair : constants) {
+                props[pair.first] = pair.second;
+            }
+        }
 
-      for (const auto& pair : props)
-      {
-         if (!pair.first.empty())
-         {
-            string value = pair.second;
-            str::replace_all(value, "\\", "\\\\");
+        for(const auto& pair : props) {
+            if(!pair.first.empty()) {
+                string value = pair.second;
+                str::replace_all(value, "\\", "\\\\");
 
-            if (!body.empty()) body += ",";
-            body += fmt::format("\"{}\": \"{}\"", pair.first, value);
-         }
-      }
+                if(!body.empty()) body += ",";
+                body += fmt::format("\"{}\": \"{}\"", pair.first, value);
+            }
+        }
 
-      body = string("{") + body + "}";
+        body = string("{") + body + "}";
 
-      queue.push_back(body);
+        queue.push_back(body);
 
-      if (flush_now) flush();
-   }
+        if(flush_now) flush();
+    }
 
-   void tracker::add_constant(std::string name, std::string value) {
-       constants[name] = value;
-   }
+    void tracker::add_constant(std::string name, std::string value) {
+        constants[name] = value;
+    }
 
-   void tracker::flush() {
+    void tracker::flush() {
 
-       string body{ "[" };
-       body += str::join(queue.begin(), queue.end(), ",");
-       body += "]";
+        string body{"["};
+        body += str::join(queue.begin(), queue.end(), ",");
+        body += "]";
 
-       h.post("alt.aloneguid.uk", url, body);
+        h.post("alt.aloneguid.uk", url, body);
 
-       queue.clear();
-   }
+        queue.clear();
+    }
 }

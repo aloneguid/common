@@ -6,7 +6,7 @@
 namespace win32 {
     class process {
     public:
-        process(DWORD pid) : pid{ pid } {
+        process(DWORD pid) : pid{pid} {
 
         }
 
@@ -30,6 +30,8 @@ namespace win32 {
         bool get_memory_info(uint64_t& working_set_bytes);
 
         double get_uptime_sec();
+
+        double get_cpu_usage();
 
         bool terminate();
 
