@@ -18,6 +18,7 @@ namespace win32 {
         double get_double_value() { return d_value; }
 
     private:
+        std::string counter_path;
         PDH_HQUERY hQuery{0};
         PDH_HCOUNTER hCounter{0};
         bool ok{false};

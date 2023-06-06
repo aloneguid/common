@@ -6,6 +6,8 @@
 #include <chrono>
 #include "kernel.h"
 #include <fmt/core.h>
+#include <Pdh.h>
+#include <PdhMsg.h>
 
 #define MAX_STR 1024
 #define STATUS_INFO_LENGTH_MISMATCH ((NTSTATUS)0xC0000004L)
@@ -53,6 +55,14 @@ namespace win32 {
 
     process::process() : pid{ ::GetCurrentProcessId() } {
 
+    }
+
+    process::~process()
+    {
+        if(pdhCpuInitialised) {
+            ::PdhRemoveCounter(pdhCpuCounter);
+            ::PdhCloseQuery(pdhCpuQuery);
+        }
     }
 
     vector<process> process::enumerate() {
@@ -284,5 +294,54 @@ namespace win32 {
         }*/
 
         return r;
+    }
+
+    double process::get_cpu_usage_percentage() {
+
+        double perc{-1.0};
+
+        // initialise pdh
+        if (!pdhCpuInitialised) {
+
+            auto status = ::PdhOpenQuery(NULL, NULL, &pdhCpuQuery);
+            if (status == ERROR_SUCCESS) {
+                // get process name and strip out extension
+                string process_name = get_name();
+                size_t idx = process_name.find_last_of('.');
+                if(idx != string::npos) process_name = process_name.substr(0, idx);
+                
+                auto path = str::to_wstr(fmt::format("\\Process V2({}:8520)\\% Processor Time", process_name));
+                status = ::PdhAddEnglishCounter(pdhCpuQuery, path.c_str(), NULL, &pdhCpuCounter);
+                if(status == ERROR_SUCCESS) {
+                    pdhCpuInitialised = true;
+                } else {
+                    ::PdhCloseQuery(pdhCpuQuery);
+                    pdhCpuQuery = 0;
+                }
+            }
+        }
+
+        // get sample
+        if(pdhCpuInitialised && pdhCpuQuery != 0) {
+            auto status = ::PdhCollectQueryData(pdhCpuQuery);
+            if(status == ERROR_SUCCESS) {
+                // Retrieve the counter value
+                PDH_FMT_COUNTERVALUE fv;
+                status = ::PdhGetFormattedCounterValue(pdhCpuCounter, PDH_FMT_DOUBLE, NULL, &fv);
+                if(ERROR_SUCCESS == status) {
+                    perc = fv.doubleValue;
+                } else {
+                    if(status == PDH_INVALID_ARGUMENT) {
+                        perc = -2;
+                    } else if(status == PDH_INVALID_DATA) {
+                        perc = -3;
+                    } else if(status == PDH_INVALID_HANDLE) {
+                        perc = -4;
+                    }
+                }
+            }
+        }
+
+        return perc;
     }
 }

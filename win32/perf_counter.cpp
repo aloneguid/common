@@ -5,7 +5,7 @@
 #pragma comment(lib, "pdh.lib")
 
 namespace win32 {
-    perf_counter::perf_counter(std::string counter_path) {
+    perf_counter::perf_counter(std::string counter_path) : counter_path{counter_path} {
         auto status = ::PdhOpenQuery(NULL, NULL, &hQuery);
         if(status == ERROR_SUCCESS) {
             auto path = str::to_wstr(counter_path);

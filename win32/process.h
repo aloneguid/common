@@ -6,11 +6,20 @@
 namespace win32 {
     class process {
     public:
+        /**
+         * @brief Creates process from a specific PID.
+         * @param pid 
+        */
         process(DWORD pid) : pid{pid} {
 
         }
 
+        /**
+         * @brief Creates process from current process.
+        */
         process();
+
+        ~process();
 
         static std::vector<process> enumerate();
 
@@ -39,7 +48,19 @@ namespace win32 {
 
         bool is_suspended();
 
+        /**
+         * @brief Using sampling (windows performance counters) therefore accurate measurements will only happen after a second or so call with a second delay. This is using "Process V2" counter available on windows 10 and above.
+         * @return 
+        */
+        double get_cpu_usage_percentage();
+
     private:
         DWORD pid;
+
+        // cpu perf counter
+        bool pdhCpuInitialised{false};
+        HANDLE pdhCpuQuery{nullptr};
+        HANDLE pdhCpuCounter{nullptr};
+
     };
 }
