@@ -23,7 +23,7 @@ namespace win32 {
 
         static std::vector<process> enumerate();
 
-        std::string get_module_filename();
+        std::string get_module_filename() const;
         std::string get_name();
 
         HWND find_main_window();

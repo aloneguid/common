@@ -81,7 +81,7 @@ namespace win32 {
         return r;
     }
 
-    std::string process::get_module_filename() {
+    std::string process::get_module_filename() const {
 
         string r;
 
