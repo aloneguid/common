@@ -6,6 +6,7 @@ namespace ext {
 
     class github_release {
     public:
+        bool is_valid;
         std::string name;
         std::string tag;
         std::string home_url;
