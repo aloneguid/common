@@ -69,4 +69,13 @@ namespace str {
     std::vector<std::string> rgx_extract_to_vec(const std::string& s, const std::string& expr);
 
     std::string deduplicate_lines(const std::string& s);
+
+    /**
+     * @brief Case insensitive compare
+     * @param haystack 
+     * @param needle 
+     * @return 
+    */
+    bool contains_ic(const std::string& haystack, const std::string& needle);
+
 }
