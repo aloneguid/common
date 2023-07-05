@@ -24,6 +24,10 @@ namespace win32 {
         return r;
     }
 
+    window window::get_foreground() {
+        return window{ ::GetForegroundWindow() };
+    }
+
     bool window::is_valid() {
         return ::IsWindow(hwnd);
     }

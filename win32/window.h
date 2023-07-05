@@ -17,6 +17,8 @@ namespace win32 {
 
         static std::vector<window> enumerate();
 
+        static window get_foreground();
+
         std::string get_text();
 
         bool is_visible();
