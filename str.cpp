@@ -31,6 +31,10 @@ namespace str {
         return atoi(str.c_str());
     }
 
+    unsigned long to_ulong(const std::string& str, int radix) {
+        return strtoul(str.c_str(), nullptr, radix);
+    }
+
     long long to_long_long(const std::string& str) {
         return atoll(str.c_str());
     }
