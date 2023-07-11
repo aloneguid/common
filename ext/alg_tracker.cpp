@@ -12,6 +12,10 @@ namespace alg
         url += app_name;
     }
 
+    tracker::~tracker() {
+        flush();
+    }
+
     void tracker::track(const std::map<std::string, std::string>& props1, bool flush_now) {
         string body;
 
@@ -47,6 +51,8 @@ namespace alg
     }
 
     void tracker::flush() {
+
+        if(queue.empty()) return;
 
         string body{"["};
         body += str::join(queue.begin(), queue.end(), ",");

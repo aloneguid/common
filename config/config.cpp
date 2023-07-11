@@ -18,7 +18,7 @@ namespace common {
         ini.LoadFile(ini_path.c_str());
     }
 
-    std::string config::get_value(const std::string& key, const std::string& section) {
+    std::string config::get_value(const std::string& key, const std::string& section) const {
         const char* v = ini.GetValue(section.c_str(), key.c_str());
         return v ? v : "";
     }

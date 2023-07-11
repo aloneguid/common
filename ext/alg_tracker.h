@@ -9,6 +9,7 @@ namespace alg
     class tracker {
     public:
         tracker(const std::string& app_name, const std::string& version);
+        ~tracker();
 
         void track(const std::map<std::string, std::string>& props, bool flush_now);
 

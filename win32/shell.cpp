@@ -25,7 +25,7 @@ namespace win32 {
         string get_shell_folder_path(int clsid) {
             TCHAR szPath[MAX_PATH];
 
-            if(SUCCEEDED(SHGetFolderPath(nullptr,
+            if(SUCCEEDED(::SHGetFolderPath(nullptr,
                 clsid,
                 nullptr,
                 0,
