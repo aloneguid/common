@@ -31,6 +31,12 @@ namespace win32 {
 
         LONG get_styles();
 
+        /**
+         * @brief Sets the window to be topmost (above all windows) or removes the flag.
+         * @param topmost 
+        */
+        void set_topmost(bool topmost);
+
         // style related functions
         bool is_child();
         bool is_minimized();

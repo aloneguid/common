@@ -73,6 +73,12 @@ namespace win32 {
         return ::GetWindowLong(hwnd, GWL_STYLE);
     }
 
+    void window::set_topmost(bool topmost) {
+        ::SetWindowPos(hwnd,
+            topmost ? HWND_TOPMOST : HWND_NOTOPMOST,
+            0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+    }
+
     bool window::is_child() {
         LONG styles = get_styles();
         return styles & WS_CHILDWINDOW;
