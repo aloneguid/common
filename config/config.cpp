@@ -23,6 +23,10 @@ namespace common {
         return v ? v : "";
     }
 
+    bool config::get_bool_value(const std::string& key, const std::string& section) const {
+        return get_value(key, section) == "y";
+    }
+
     std::vector<std::string> config::get_all_values(const std::string& key, const std::string& section) {
         vector<string> r;
         list<CSimpleIni::Entry> ir;
@@ -47,6 +51,10 @@ namespace common {
             ini.SetValue(section.c_str(), key.c_str(), one_value.c_str());
         }
         is_dirty = true;
+    }
+
+    void config::set_bool_value(const std::string& key, bool value, const std::string& section) {
+        set_value(key, value ? "y" : "", section);
     }
 
     void config::delete_key(const std::string& key, const std::string& section) {
