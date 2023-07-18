@@ -23,8 +23,13 @@ namespace common {
         return v ? v : "";
     }
 
-    bool config::get_bool_value(const std::string& key, const std::string& section) const {
-        return get_value(key, section) == "y";
+    bool config::get_bool_value(const std::string& key, bool default_value, const std::string& section) const {
+        string v = get_value(key, section);
+        if(!v.empty()) {
+            if(v == "y" || v == "1") return true;
+            if(v == "n" || v == "0") return false;
+        }
+        return default_value;
     }
 
     std::vector<std::string> config::get_all_values(const std::string& key, const std::string& section) {
@@ -54,7 +59,7 @@ namespace common {
     }
 
     void config::set_bool_value(const std::string& key, bool value, const std::string& section) {
-        set_value(key, value ? "y" : "", section);
+        set_value(key, value ? "y" : "n", section);
     }
 
     void config::delete_key(const std::string& key, const std::string& section) {
