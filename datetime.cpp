@@ -1,5 +1,6 @@
 #include "datetime.h"
 #include <iomanip>
+#include <time.h>
 #include <fmt/core.h>
 #include "str.h"
 
@@ -8,8 +9,7 @@ using namespace std::chrono;
 
 namespace datetime
 {
-   std::string to_iso_8601(std::chrono::time_point<std::chrono::system_clock> t)
-   {
+   std::string to_iso_8601(std::chrono::time_point<std::chrono::system_clock> t) {
       // convert to time_t which will represent the number of
       // seconds since the UNIX epoch, UTC 00:00:00 Thursday, 1st. January 1970
       time_t epoch_seconds = std::chrono::system_clock::to_time_t(t);
@@ -17,8 +17,14 @@ namespace datetime
       // Format this as date time to seconds resolution
       // e.g. 2016-08-30T08:18:51
       std::stringstream stream;
+
       struct tm buf;
+#if WIN32
       gmtime_s(&buf, &epoch_seconds);
+#else
+      buf = *gmtime(&epoch_seconds);
+#endif
+
       stream << std::put_time(&buf, "%FT%T");
 
       // If we now convert back to a time_point we will get the time truncated
@@ -110,18 +116,15 @@ namespace datetime
 
    }
 
-   measure::measure()
-   {
-      start_time = std::chrono::high_resolution_clock::now();
+   measure::measure() {
+       start_time = std::chrono::steady_clock::now();
    }
 
-   measure::~measure()
-   {
+   measure::~measure() {
    }
 
-   long long measure::take()
-   {
-      end_time = std::chrono::high_resolution_clock::now();
+   long long measure::take() {
+      end_time = std::chrono::steady_clock::now();
       duration = end_time - start_time;
       return duration_cast<milliseconds>(duration).count();
    }

@@ -1,5 +1,9 @@
 #include "fss.h"
+#if WIN32
 #include <Windows.h>
+#else
+#include <unistd.h>
+#endif
 #include "str.h"
 #include <fstream>
 #include <vector>
@@ -9,19 +13,28 @@ using namespace std;
 namespace fss
 {
     std::string get_current_dir() {
+
+#if WIN32
         TCHAR buffer[MAX_PATH] = {0};
         ::GetModuleFileName(nullptr, buffer, MAX_PATH);
         std::wstring::size_type pos = std::wstring(buffer).find_last_of(L"\\/");
         auto r = std::wstring(buffer).substr(0, pos);
         return str::to_str(r);
+#else
+        //long size = pathconf(".", _PC_PATH_MAX);
+        //getcwd()
+        return "";
+#endif
     }
 
     std::string get_current_exec_path() {
+#if WIN32
         TCHAR szFileName[MAX_PATH];
-
         ::GetModuleFileName(nullptr, szFileName, MAX_PATH);
-
         return str::to_str(szFileName);
+#else
+        return "";
+#endif
     }
 
     bool file_exists(const std::string& name) {

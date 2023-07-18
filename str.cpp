@@ -1,7 +1,9 @@
 #include <string>
 #include <vector>
 #include <map>
+#if WIN32
 #include <windows.h>
+#endif
 #include <cmath>
 #include <sstream>
 #include <regex>
@@ -11,6 +13,7 @@
 using namespace std;
 
 namespace str {
+#if WIN32
     std::wstring to_wstr(const std::string& str) {
         if (str.empty()) return std::wstring();
         int size_needed = ::MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), nullptr, 0);
@@ -26,6 +29,15 @@ namespace str {
         ::WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), &strTo[0], size_needed, nullptr, nullptr);
         return strTo;
     }
+#else
+    std::wstring to_wstr(const std::string& str) {
+        return L"";
+    }
+
+    std::string to_str(const std::wstring& wstr) {
+        return "";
+    }
+#endif
 
     int to_int(const std::string& str) {
         return atoi(str.c_str());
@@ -247,7 +259,7 @@ namespace str {
 
     }
 
-    std::string base64_decode(std::string const& encoded_string) {
+    std::string base64_decode(const std::string& encoded_string) {
         int in_len = encoded_string.size();
         int i = 0;
         int j = 0;
@@ -288,6 +300,7 @@ namespace str {
         return ret;
     }
 
+#if WIN32
     size_t word_count(const std::string& sentence) {
         size_t r = 0;
 
@@ -309,6 +322,7 @@ namespace str {
 
         return r;
     }
+#endif
 
     std::string remove_non_ascii(const std::string& s) {
         string r;
