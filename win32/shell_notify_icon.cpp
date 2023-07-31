@@ -8,8 +8,10 @@
 #pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 #pragma comment(lib, "comctl32.lib")
 
+using namespace std;
+
 namespace win32 {
-    shell_notify_icon::shell_notify_icon(HWND hwnd, GUID icon_guid, UINT callback_message) 
+    shell_notify_icon::shell_notify_icon(HWND hwnd, GUID icon_guid, UINT callback_message, const string& tooltip_text) 
         : hwnd{ hwnd }, callback_message{ callback_message } {
 
         if(icon_guid == GUID_NULL)
@@ -29,7 +31,7 @@ namespace win32 {
         nid.uFlags = NIF_ICON | NIF_TIP | NIF_MESSAGE | NIF_SHOWTIP | NIF_GUID;
         nid.guidItem = this->icon_guid;
         nid.uCallbackMessage = callback_message;
-        //::StringCchCopy(nid.szTip, ARRAYSIZE(nid.szTip), L"test tip");
+        ::StringCchCopy(nid.szTip, ARRAYSIZE(nid.szTip), str::to_wstr(tooltip_text).c_str());
         ::LoadIconMetric(hModule, L"IDI_ICON1", LIM_SMALL, &nid.hIcon);
         if(!::Shell_NotifyIcon(NIM_ADD, &nid)) {
             return;
@@ -46,15 +48,16 @@ namespace win32 {
         ::Shell_NotifyIcon(NIM_DELETE, &nid);
     }
 
-    void shell_notify_icon::set_tooptip(const std::string& text) {
-        NOTIFYICONDATA nid = { sizeof(nid) };
-        nid.cbSize = sizeof(NOTIFYICONDATA);
+    /*
+    bool shell_notify_icon::set_tooptip(const std::string& text) {
+        NOTIFYICONDATA nid = {};
+        nid.cbSize = sizeof(nid);
         nid.hWnd = hwnd;
         nid.uFlags = NIF_GUID | NIF_TIP;
         nid.guidItem = icon_guid;
         ::StringCchCopy(nid.szTip, ARRAYSIZE(nid.szTip), str::to_wstr(text).c_str());
-        ::Shell_NotifyIcon(NIM_MODIFY, &nid);
-    }
+        return ::Shell_NotifyIcon(NIM_MODIFY, &nid);
+    }*/
 
     void shell_notify_icon::display_notification(const std::string& title, const std::string& text) {
 
