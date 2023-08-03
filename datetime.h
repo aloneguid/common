@@ -2,8 +2,7 @@
 #include <string>
 #include <chrono>
 
-namespace datetime
-{
+namespace datetime {
    std::string to_iso_8601(std::chrono::time_point<std::chrono::system_clock> t = std::chrono::system_clock::now());
 
    std::string human_readable_duration(std::chrono::seconds seconds, bool short_format = true);
@@ -12,8 +11,7 @@ namespace datetime
    /// Really simple time measure utility.
    /// Starts measuring time when constructed. To 
    /// </summary>
-   class measure
-   {
+   class measure {
    public:
       measure();
       ~measure();
