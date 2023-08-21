@@ -15,11 +15,11 @@ namespace win32
       http();
       ~http();
 
-      std::string get(const std::string& domain, const std::string& url) const;
+      std::string get(const std::string& abs_url) const;
 
-      int get_get_headers(const std::string& url, std::map<std::string, std::string>& headers) const;
+      int get_get_headers(const std::string& abs_url, std::map<std::string, std::string>& headers) const;
 
-      void post(const std::string& domain, const std::string& url, const std::string& data, bool is_async = false) const;
+      void post(const std::string& domain, const std::string& abs_url, const std::string& data, bool is_async = false) const;
 
    private:
       HINTERNET hSession{ 0 };

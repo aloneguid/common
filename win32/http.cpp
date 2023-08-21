@@ -2,6 +2,7 @@
 #include <vector>
 #include <iterator>
 #include "../../common/str.h"
+#include "url.h"
 
 #pragma comment(lib, "winhttp.lib")
 
@@ -24,17 +25,19 @@ namespace win32
         }
     }
 
-    std::string http::get(const std::string& domain, const std::string& url) const {
+    std::string http::get(const std::string& abs_url) const {
         string result;
 
         if(!hSession) return result;
 
+        url url{abs_url};
+
         HINTERNET hConnect = ::WinHttpConnect(hSession,
-           str::to_wstr(domain).c_str(),
+           str::to_wstr(url.host).c_str(),
            INTERNET_DEFAULT_HTTPS_PORT, 0);
 
         if(hConnect) {
-            wstring wurl{str::to_wstr(url)};
+            wstring wurl{str::to_wstr(url.query)};
             HINTERNET hRequest = ::WinHttpOpenRequest(hConnect,
                L"GET",
                wurl.c_str(),
