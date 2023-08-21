@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <map>
+#include <vector>
 
 class url {
 public:
@@ -10,6 +11,9 @@ public:
     std::string protocol;
     std::string host;
     std::string query;
+    std::string query_without_parameters;
 
-    std::map<std::string, std::string> parameters;
+    std::vector<std::pair<std::string, std::string>> parameters;
+
+    std::string to_string();
 };
