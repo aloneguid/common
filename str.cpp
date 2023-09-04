@@ -300,6 +300,53 @@ namespace str {
         return ret;
     }
 
+    // see https://www.programcreek.com/cpp/?code=d2school%2Fda4qi4%2Fda4qi4-master%2Fsrc%2Futilities%2Fhttp_utilities.cpp
+    std::string url_encode(const std::string& value) {
+        static auto hex_digt = "0123456789ABCDEF";
+
+        std::string result;
+        result.reserve(value.size() << 1);
+
+        for (auto ch : value) {
+            if ((ch >= '0' && ch <= '9')
+                || (ch >= 'A' && ch <= 'Z')
+                || (ch >= 'a' && ch <= 'z')
+                || ch == '-' || ch == '_' || ch == '!'
+                || ch == '\'' || ch == '(' || ch == ')'
+                || ch == '*' || ch == '~' || ch == '.')  /* !'()*-._~ */ {
+                result.push_back(ch);
+            } else {
+                result += std::string("%") +
+                    hex_digt[static_cast<unsigned char>(ch) >> 4]
+                    + hex_digt[static_cast<unsigned char>(ch) & 15];
+            }
+        }
+
+        return result;
+    }
+
+    std::string url_decode(const std::string& value) {
+        std::string result;
+        result.reserve(value.size());
+
+        for (std::size_t i = 0; i < value.size(); ++i) {
+            auto ch = value[i];
+
+            if (ch == '%' && (i + 2) < value.size()) {
+                auto hex = value.substr(i + 1, 2);
+                auto dec = static_cast<char>(std::strtol(hex.c_str(), nullptr, 16));
+                result.push_back(dec);
+                i += 2;
+            } else if (ch == '+') {
+                result.push_back(' ');
+            } else {
+                result.push_back(ch);
+            }
+        }
+
+        return result;
+    }
+
 #if WIN32
     size_t word_count(const std::string& sentence) {
         size_t r = 0;

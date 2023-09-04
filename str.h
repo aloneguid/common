@@ -60,6 +60,10 @@ namespace str {
 
     std::string base64_decode(std::string const& encoded_string);
 
+    std::string url_encode(const std::string& value);
+
+    std::string url_decode(const std::string& value);
+
 #if WIN32
     size_t word_count(const std::string& sentence);
 #endif

@@ -25,6 +25,7 @@ namespace alg
 
         if(!constants.empty()) {
             for(const auto& pair : constants) {
+                if(pair.first.empty() || pair.second.empty()) continue;
                 props[pair.first] = pair.second;
             }
         }
