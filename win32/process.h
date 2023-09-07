@@ -23,7 +23,12 @@ namespace win32 {
 
         static std::vector<process> enumerate();
 
-        static void start(const std::string& cmdline);
+        /**
+         * @brief Starts a process and returns PID on success
+         * @param cmdline 
+         * @return PID
+        */
+        static DWORD start(const std::string& cmdline);
 
         std::string get_module_filename() const;
         std::string get_name();

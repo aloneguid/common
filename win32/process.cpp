@@ -82,10 +82,11 @@ namespace win32 {
         return r;
     }
 
-    void process::start(const std::string& cmdline) {
+    DWORD process::start(const std::string& cmdline) {
 
         STARTUPINFO si{};
         PROCESS_INFORMATION pi{};
+        DWORD pid{ 0 };
 
         if (::CreateProcess(nullptr,
             const_cast<wchar_t*>(str::to_wstr(cmdline).c_str()),
@@ -100,9 +101,13 @@ namespace win32 {
 
             ::WaitForSingleObject(pi.hProcess, INFINITE);
 
+            pid = pi.dwProcessId;
+
             ::CloseHandle(pi.hProcess);
             ::CloseHandle(pi.hThread);
         }
+
+        return pid;
     }
 
     std::string process::get_module_filename() const {
