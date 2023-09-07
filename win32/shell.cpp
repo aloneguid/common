@@ -53,10 +53,6 @@ namespace win32 {
                 nullptr,
                 SW_SHOWDEFAULT);
 
-            if(hi) {
-                int i = 0;
-            }
-
             /*fs::path fs_path(path);
             string work_dir = fs_path.parent_path();
             string process_name = fs_path.filename();

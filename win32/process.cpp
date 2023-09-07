@@ -5,6 +5,7 @@
 #include <winternl.h>
 #include <chrono>
 #include "kernel.h"
+#include "str.h"
 #include <fmt/core.h>
 #include <Pdh.h>
 #include <PdhMsg.h>
@@ -79,6 +80,29 @@ namespace win32 {
         }
 
         return r;
+    }
+
+    void process::start(const std::string& cmdline) {
+
+        STARTUPINFO si{};
+        PROCESS_INFORMATION pi{};
+
+        if (::CreateProcess(nullptr,
+            const_cast<wchar_t*>(str::to_wstr(cmdline).c_str()),
+            nullptr,
+            nullptr,
+            false,
+            0,
+            nullptr,
+            nullptr,
+            &si,
+            &pi)) {
+
+            ::WaitForSingleObject(pi.hProcess, INFINITE);
+
+            ::CloseHandle(pi.hProcess);
+            ::CloseHandle(pi.hThread);
+        }
     }
 
     std::string process::get_module_filename() const {

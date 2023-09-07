@@ -23,6 +23,8 @@ namespace win32 {
 
         static std::vector<process> enumerate();
 
+        static void start(const std::string& cmdline);
+
         std::string get_module_filename() const;
         std::string get_name();
 
