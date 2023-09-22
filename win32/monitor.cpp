@@ -1,5 +1,6 @@
 #include "monitor.h"
 #include <WinUser.h>
+#include "str.h"
 
 using namespace std;
 
@@ -13,7 +14,14 @@ namespace win32 {
 
         vector<monitor>* r = (vector<monitor>*)hData;
 
-        r->emplace_back(r->size(), hMonitor, "", *pVirtualCoordinates);
+        string name;
+        MONITORINFOEX mi{};
+        mi.cbSize = sizeof(MONITORINFOEX);
+        if(::GetMonitorInfo(hMonitor, &mi)) {
+            name = str::to_str(wstring(mi.szDevice));
+        }
+
+        r->emplace_back(r->size(), hMonitor, name, *pVirtualCoordinates);
 
         return TRUE;
     }
