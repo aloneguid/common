@@ -28,7 +28,7 @@ namespace win32 {
          * @param cmdline 
          * @return PID
         */
-        static DWORD start(const std::string& cmdline);
+        static DWORD start(const std::string& cmdline, bool wait_for_exit = false);
 
         std::string get_module_filename() const;
         std::string get_name();
