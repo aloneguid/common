@@ -82,7 +82,7 @@ namespace win32 {
         return r;
     }
 
-    DWORD process::start(const std::string& cmdline) {
+    DWORD process::start(const std::string& cmdline, bool wait_for_exit) {
 
         STARTUPINFO si{};
         PROCESS_INFORMATION pi{};
@@ -99,7 +99,9 @@ namespace win32 {
             &si,
             &pi)) {
 
-            ::WaitForSingleObject(pi.hProcess, INFINITE);
+            if(wait_for_exit) {
+                ::WaitForSingleObject(pi.hProcess, INFINITE);
+            }
 
             pid = pi.dwProcessId;
 
