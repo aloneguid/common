@@ -86,4 +86,32 @@ namespace str {
     */
     bool contains_ic(const std::string& haystack, const std::string& needle);
 
+    /**
+     * @brief Escapes pipe character in the string with backslash and pipe.
+     * @param input 
+     * @return 
+    */
+    std::string escape_pipe(const std::string& input);
+
+    /**
+     * @brief Unescapes backslash and pipe character in the string with just pipe.
+     * @param input 
+     * @return 
+    */
+    std::string unescape_pipe(const std::string& input);
+
+    /**
+     * @brief Joins vector of strings with pipe character, taking into account that some strings may contain pipe character.
+     * @param parts 
+     * @return 
+    */
+    std::string join_with_pipe(const std::vector<std::string>& parts);
+
+    /**
+     * @brief Split string by pipe character, taking into account that some strings may contain pipe character.
+     * @param line 
+     * @return 
+    */
+    std::vector<std::string> split_pipe(const std::string& line);
+
 }

@@ -425,13 +425,61 @@ namespace str {
 
     }
 
-    bool contains_ic(const std::string& haystack, const std::string& needle)
-    {
+    bool contains_ic(const std::string& haystack, const std::string& needle) {
         auto it = std::search(
             haystack.begin(), haystack.end(),
             needle.begin(), needle.end(),
             [](char ch1, char ch2) { return std::toupper(ch1) == std::toupper(ch2); }
         );
         return (it != haystack.end());
+    }
+
+    std::string escape_pipe(const std::string& input) {
+        std::string result;
+        for(char c : input) {
+            if(c == '|') {
+                result += "\\|";
+            } else {
+                result += c;
+            }
+        }
+        return result;
+    }
+
+    std::string unescape_pipe(const std::string& input) {
+        std::string result = input;
+        size_t position = 0;
+        while((position = result.find("\\|", position)) != std::string::npos) {
+            result.erase(position, 1);
+        }
+        return result;
+    }
+
+    std::string join_with_pipe(const std::vector<std::string>& parts) {
+        std::ostringstream joined;
+        for(auto it = parts.begin(); it != parts.end(); ++it) {
+            if(it != parts.begin()) {
+                joined << "|";
+            }
+            joined << escape_pipe(*it);
+        }
+        return joined.str();
+    }
+
+    std::vector<std::string> split_pipe(const std::string& line) {
+
+        // This function replaces all escaped pipes (\\|) with a non-printable character (\v),
+        // then splits the string by the pipe character (|). After splitting, it replaces the
+        // non-printable character back to the pipe character in each substring.
+        // Please note that this code assumes that the non - printable character \v is not used in
+        // the input string.If it is, you may need to choose a different character for temporary replacement.
+
+        std::string copy(line);
+        str::replace_all(copy, "\\|", "\v");
+        auto result = str::split(copy, "|");
+        for(auto& s : result) {
+            str::replace_all(s, "\v", "|");
+        }
+        return result;
     }
 }
