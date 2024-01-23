@@ -181,6 +181,7 @@ namespace str {
     }
 
     void replace_all(std::string& s, const std::string& search, const std::string& replacement) {
+        if(search.empty()) return;
         std::string::size_type n = 0;
         while ((n = s.find(search, n)) != std::string::npos) {
             s.replace(n, search.size(), replacement);
