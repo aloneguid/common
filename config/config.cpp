@@ -85,6 +85,8 @@ namespace common {
     void config::commit() {
         if (!is_dirty) return;
 
+
+
         ini.SaveFile(ini_path.c_str());
         is_dirty = false;
     }
