@@ -37,7 +37,11 @@ namespace win32 {
 
         // Activate the UWP application
         DWORD processId;
-        hr = appActivationManager->ActivateApplication(app_user_mode_id.c_str(), nullptr, AO_NONE, &processId);
+        hr = appActivationManager->ActivateApplication(
+            app_user_mode_id.c_str(),
+            arg.empty() ? nullptr : arg.c_str(),
+            AO_NONE,
+            &processId);
         appActivationManager->Release();
 
         return SUCCEEDED(hr);
