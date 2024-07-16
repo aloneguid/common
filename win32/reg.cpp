@@ -144,7 +144,7 @@ namespace win32
 
             if(lResult == ERROR_SUCCESS) {
                 DWORD dwType;
-                DWORD cbData;
+                DWORD cbData{0};
                 lResult = ::RegGetValue(hKey,
                    nullptr,
                    str::to_wstr(value_name).c_str(),
@@ -199,7 +199,7 @@ namespace win32
 
             if(lResult == ERROR_SUCCESS) {
                 DWORD dwType;
-                DWORD cbData;
+                DWORD cbData{0};
                 lResult = ::RegGetValue(hKey,
                    nullptr,
                    str::to_wstr(value_name).c_str(),
@@ -328,6 +328,21 @@ namespace win32
 
                 ::RegCloseKey(hKey);
             }
+        }
+
+        bool path_exists(hive h, const std::string& path) {
+
+            HKEY hKey;
+            LSTATUS lResult = ::RegOpenKeyEx(to_hkey(h),
+               str::to_wstr(path).c_str(),
+               0, KEY_READ, &hKey);
+            bool exists = (lResult == ERROR_SUCCESS);
+
+            if(exists) {
+                ::RegCloseKey(hKey);
+            }
+            
+            return exists;
         }
     }
 }

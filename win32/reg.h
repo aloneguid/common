@@ -13,8 +13,7 @@ namespace win32
 
          local_machine,
 
-         current_user,
-
+         current_user
       };
 
       std::vector<std::string> enum_subkeys(hive h, std::string path);
@@ -43,5 +42,7 @@ namespace win32
          const std::string& path,
          const std::vector<std::string>& value,
          const std::string& value_name = "");
+
+      bool path_exists(hive h, const std::string& path);
    }
 }
