@@ -114,6 +114,10 @@ namespace win32::user {
         return ::GetKeyState(VK_SHIFT) & 0x8000;
     }
 
+    bool is_kbd_caps_locks_on() {
+        return (::GetKeyState(VK_CAPITAL) & 0x0001) != 0;
+    }
+
     bool is_app_light_theme(bool& value) {
 
         string s = win32::reg::get_value(win32::reg::hive::current_user,

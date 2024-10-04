@@ -25,6 +25,7 @@ namespace win32::user
    bool is_kbd_ctrl_down();
    bool is_kbd_alt_down();
    bool is_kbd_shift_down();
+   bool is_kbd_caps_locks_on();
 
    // returns true if app theme is set to Light
    bool is_app_light_theme(bool& value);
