@@ -1,5 +1,4 @@
 #include "serial_port.h"
-#include <Windows.h>
 #include <SetupAPI.h>
 #include "str.h"
 #include "reg.h"
@@ -70,5 +69,79 @@ namespace win32 {
         vector<serial_port> r;
         QueryUsingSetupAPI(GUID_DEVINTERFACE_COMPORT, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE, r);
         return r;
+    }
+
+    bool serial_port::send(const std::string& data) {
+        if(!is_open) open();
+        if(!is_open) return false;
+
+        // send the data
+        DWORD dwBytesWritten{0};
+        bool ok = WriteFile(hSerial, data.c_str(), data.size(), &dwBytesWritten, nullptr);
+        return ok;
+    }
+
+    bool serial_port::recv(std::string& data, size_t size) {
+        if(!is_open) open();
+        if(!is_open) return false;
+
+        std::vector<char> buffer(size);
+        DWORD dwBytesRead{0};
+        bool ok = ReadFile(hSerial, buffer.data(), size, &dwBytesRead, nullptr);
+        if(ok) {
+            data.assign(buffer.begin(), buffer.begin() + dwBytesRead);
+        }
+        return ok;
+    }
+
+    void serial_port::open() {
+        wstring w_name = str::to_wstr(name);
+        hSerial = ::CreateFile(w_name.c_str(), GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr);
+        if(hSerial == INVALID_HANDLE_VALUE) {
+            DWORD dwError{GetLastError()};
+            if(dwError == ERROR_FILE_NOT_FOUND) {
+                //serial port does not exist. Inform user.
+            } else {
+                //some other error occurred. Inform user.
+            }
+        } else {
+            // set the COM port settings
+            DCB dcbSerialParams = {0};
+            dcbSerialParams.DCBlength = sizeof(dcbSerialParams);
+            if(!GetCommState(hSerial, &dcbSerialParams)) {
+                //error getting state
+                ::CloseHandle(hSerial);
+            } else {
+                dcbSerialParams.BaudRate = CBR_9600;
+                dcbSerialParams.ByteSize = 8;
+                dcbSerialParams.StopBits = ONESTOPBIT;
+                dcbSerialParams.Parity = NOPARITY;
+                if(!SetCommState(hSerial, &dcbSerialParams)) {
+                    //error setting serial port state
+                    ::CloseHandle(hSerial);
+                }
+            }
+
+            // set timeouts
+            COMMTIMEOUTS timeouts = {0};
+            timeouts.ReadIntervalTimeout = 50;
+            timeouts.ReadTotalTimeoutConstant = 50;
+            timeouts.ReadTotalTimeoutMultiplier = 10;
+            timeouts.WriteTotalTimeoutConstant = 50;
+            timeouts.WriteTotalTimeoutMultiplier = 10;
+            if(!SetCommTimeouts(hSerial, &timeouts)) {
+                //error setting timeouts
+                ::CloseHandle(hSerial);
+            }
+
+            is_open = true;
+        }
+    }
+
+    void serial_port::close() {
+        if(is_open) {
+            ::CloseHandle(hSerial);
+            is_open = false;
+        }
     }
 }
