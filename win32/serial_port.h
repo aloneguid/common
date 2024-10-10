@@ -15,6 +15,7 @@ namespace win32 {
         const std::string friendly_name;
 
         bool send(const std::string& data);
+        bool recv(std::string& data, size_t size);
 
     private:
         bool is_open{false};
