@@ -138,4 +138,8 @@ namespace win32::user {
 
         return !s.empty();
     }
+
+    void message_box(const std::string& caption, const std::string& text) {
+        ::MessageBoxA(nullptr, text.c_str(), caption.c_str(), MB_OK);
+    }
 }
