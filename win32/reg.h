@@ -1,14 +1,12 @@
 #pragma once
 #include <string>
 #include <vector>
-#include <map>
+#include <windows.h>
 
 namespace win32
 {
-   namespace reg
-   {
-      enum class hive
-      {
+   namespace reg {
+      enum class hive {
          classes_root = 0,
 
          local_machine,
@@ -19,6 +17,8 @@ namespace win32
       std::vector<std::string> enum_subkeys(hive h, std::string path);
 
       std::vector<std::string> get_value_names(hive h, std::string path);
+
+      std::string get_value(HKEY& hKey, const std::string& value_name = "");
 
       std::string get_value(hive h, const std::string& path, const std::string& value_name = "");
 

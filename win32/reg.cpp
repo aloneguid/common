@@ -1,5 +1,5 @@
 #include "reg.h"
-#include <windows.h>
+#include "reg.h"
 #include <vector>
 #include "../str.h"
 
@@ -134,56 +134,60 @@ namespace win32
             return result;
         }
 
+        std::string get_value(HKEY& hKey, const std::string& value_name) {
+            string r;
+            DWORD dwType;
+            DWORD cbData{0};
+            HRESULT lResult = ::RegGetValue(hKey,
+               nullptr,
+               str::to_wstr(value_name).c_str(),
+               RRF_RT_ANY,
+               &dwType,
+               nullptr,
+               &cbData);
+
+            if(lResult == ERROR_SUCCESS) {
+                // dwType contains data type like REG_SZ
+                // cbData is buffer length to allocate
+
+                vector<char> buffer(cbData + 1);
+                cbData = buffer.size();
+
+                if(dwType == REG_SZ || dwType == REG_EXPAND_SZ) {
+                    lResult = ::RegGetValue(hKey, nullptr,
+                       str::to_wstr(value_name).c_str(),
+                       RRF_RT_ANY, &dwType,
+                       &buffer[0],
+                       &cbData);
+
+                    wstring sv(reinterpret_cast<wchar_t*>(&buffer[0]));
+                    r = str::to_str(sv);
+                } else if(dwType == REG_DWORD) {
+                    lResult = ::RegGetValue(hKey, nullptr,
+                        str::to_wstr(value_name).c_str(),
+                        RRF_RT_REG_DWORD, &dwType,
+                        &buffer[0],
+                        &cbData);
+                    DWORD number = *((DWORD*)&buffer[0]);
+                    r = std::to_string(number);
+                }
+            }
+            return r;
+        }
+
         std::string get_value(hive h, const std::string& path, const std::string& value_name) {
             HKEY hKey;
-            string r;
 
             LSTATUS lResult = ::RegOpenKeyEx(to_hkey(h),
                str::to_wstr(path).c_str(),
                0, KEY_READ, &hKey);
+            string r;
 
             if(lResult == ERROR_SUCCESS) {
-                DWORD dwType;
-                DWORD cbData{0};
-                lResult = ::RegGetValue(hKey,
-                   nullptr,
-                   str::to_wstr(value_name).c_str(),
-                   RRF_RT_ANY,
-                   &dwType,
-                   nullptr,
-                   &cbData);
-
-                if(lResult == ERROR_SUCCESS) {
-                    // dwType contains data type like REG_SZ
-                    // cbData is buffer length to allocate
-
-                    vector<char> buffer(cbData + 1);
-                    cbData = buffer.size();
-
-                    if(dwType == REG_SZ || dwType == REG_EXPAND_SZ) {
-                        lResult = ::RegGetValue(hKey, nullptr,
-                           str::to_wstr(value_name).c_str(),
-                           RRF_RT_ANY, &dwType,
-                           &buffer[0],
-                           &cbData);
-
-                        wstring sv(reinterpret_cast<wchar_t*>(&buffer[0]));
-                        r = str::to_str(sv);
-                    } else if(dwType == REG_DWORD) {
-                        lResult = ::RegGetValue(hKey, nullptr,
-                            str::to_wstr(value_name).c_str(),
-                            RRF_RT_REG_DWORD, &dwType,
-                            &buffer[0],
-                            &cbData);
-                        DWORD number = *((DWORD*)&buffer[0]);
-                        r = std::to_string(number);
-                    }
-                }
-
+                r = get_value(hKey, value_name);
             }
 
             ::RegCloseKey(hKey);
-
 
             return r;
         }
