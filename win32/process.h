@@ -21,6 +21,10 @@ namespace win32 {
 
         ~process();
 
+        /**
+         * @brief Enumerates all processes on the system.
+         * @return
+        */
         static std::vector<process> enumerate();
 
         /**
@@ -31,7 +35,7 @@ namespace win32 {
         static DWORD start(const std::string& cmdline, bool wait_for_exit = false);
 
         std::string get_module_filename() const;
-        std::string get_name();
+        std::string get_name() const;
 
         HWND find_main_window();
 

@@ -131,7 +131,7 @@ namespace win32 {
         return r;
     }
 
-    std::string process::get_name() {
+    std::string process::get_name() const {
         string mfn = get_module_filename();
 
         size_t idx = mfn.find_last_of('\\');
