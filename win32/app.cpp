@@ -1,15 +1,33 @@
 #include "app.h"
+#include "kernel.h"
 #include "../str.h"
 
 using namespace std;
 
 namespace win32 {
+
+    shared_ptr<app> low_level_keyboard_hook_app;
+
     void app::set_message_timeout(size_t milliseconds) {
         if(milliseconds > 0) {
             timeout_timer_id = ::SetTimer(NULL, NULL, milliseconds, NULL);
         } else if(timeout_timer_id != 0) {
             ::KillTimer(NULL, timeout_timer_id);
         }
+    }
+
+    bool app::install_low_level_keyboard_hook() {
+        //HMODULE hModule = ::GetModuleHandle(NULL);
+        HHOOK hLLKHook = ::SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, NULL, 0);
+
+        if(hLLKHook) {
+            low_level_keyboard_hook_app = shared_ptr<app>(this);
+        } else {
+            // error
+            string error = kernel::get_last_error_text();
+        }
+
+        return hLLKHook != NULL;
     }
 
     LRESULT WINAPI win32::app::WndProc(
@@ -25,6 +43,16 @@ namespace win32 {
         }
 
         return ::DefWindowProc(hWnd, msg, wParam, lParam);
+    }
+
+    LRESULT app::LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
+        if(nCode >= 0) {
+            if(low_level_keyboard_hook_app && low_level_keyboard_hook_app->on_low_level_keyboard_hook) {
+                KBDLLHOOKSTRUCT* p = (KBDLLHOOKSTRUCT*)lParam;
+                low_level_keyboard_hook_app->on_low_level_keyboard_hook(wParam, *p);
+            }
+        }
+        return ::CallNextHookEx(NULL, nCode, wParam, lParam);
     }
 
     app::app(const string& class_name, const string& window_title) {
@@ -75,6 +103,11 @@ namespace win32 {
         ::PostQuitMessage(0);
         ::DestroyWindow(hwnd);
         ::UnregisterClass(wc.lpszClassName, wc.hInstance);
+
+        if(hLLKHook) {
+            ::UnhookWindowsHookEx(hLLKHook);
+            low_level_keyboard_hook_app.reset();
+        }
     }
 
     void app::add_clipboard_listener() {
