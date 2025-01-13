@@ -6,7 +6,7 @@ using namespace std;
 
 namespace win32 {
 
-    shared_ptr<app> low_level_keyboard_hook_app;
+    app* low_level_keyboard_hook_app{nullptr};
 
     void app::set_message_timeout(size_t milliseconds) {
         if(milliseconds > 0) {
@@ -21,7 +21,7 @@ namespace win32 {
         HHOOK hLLKHook = ::SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, NULL, 0);
 
         if(hLLKHook) {
-            low_level_keyboard_hook_app = shared_ptr<app>(this);
+            low_level_keyboard_hook_app = this;
         } else {
             // error
             string error = kernel::get_last_error_text();
@@ -106,7 +106,9 @@ namespace win32 {
 
         if(hLLKHook) {
             ::UnhookWindowsHookEx(hLLKHook);
-            low_level_keyboard_hook_app.reset();
+        }
+        if(low_level_keyboard_hook_app) {
+            low_level_keyboard_hook_app = nullptr;
         }
     }
 
