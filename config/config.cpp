@@ -32,6 +32,18 @@ namespace common {
         return default_value;
     }
 
+    int config::get_int_value(const std::string& key, int default_value, const std::string& section) const {
+        string v = get_value(key, section);
+        if(!v.empty()) {
+            try {
+                return stoi(v);
+            } catch(...) {
+                return default_value;
+            }
+        }
+        return default_value;
+    }
+
     std::vector<std::string> config::get_all_values(const std::string& key, const std::string& section) {
         vector<string> r;
         list<CSimpleIni::Entry> ir;
