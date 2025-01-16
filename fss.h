@@ -19,4 +19,8 @@ namespace fss
    std::string read_file_as_string(const std::string& name);
 
    void write_file_as_string(const std::string& filename, const std::string& content);
+
+   std::string get_temp_file_path(const std::string& prefix = "TMP");
+
+   bool delete_file(const std::string& path);
 }

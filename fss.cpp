@@ -75,4 +75,28 @@ namespace fss
         ofs << content;
         ofs.flush();
     }
+
+    std::string get_temp_file_path(const string& prefix) {
+        WCHAR temp_path[MAX_PATH];
+        WCHAR temp_file[MAX_PATH];
+
+        // Get the path to the temporary folder
+        DWORD path_len = ::GetTempPath(MAX_PATH, temp_path);
+        if (path_len == 0 || path_len > MAX_PATH) {
+            throw std::runtime_error("Failed to get temp path");
+        }
+
+        // Generate a unique temporary file name
+        UINT unique_num = ::GetTempFileName(temp_path, str::to_wstr(prefix).c_str(), 0, temp_file);
+        if (unique_num == 0) {
+            throw std::runtime_error("Failed to get temp file name");
+        }
+
+        return str::to_str(wstring(temp_file));
+    }
+
+    bool delete_file(const std::string& path) {
+        // use native c++ file system
+        return std::remove(path.c_str());
+    }
 }

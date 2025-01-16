@@ -15,6 +15,13 @@ namespace common {
         fs::create_directories(abs.parent_path());
 
         ini.SetMultiKey(true);
+        ini.SetMultiLine(true);
+
+        reload();
+    }
+
+    void config::reload() {
+        ini.Reset();
         ini.LoadFile(ini_path.c_str());
     }
 

@@ -22,6 +22,7 @@ namespace common {
         std::vector<std::string> list_sections();
         void delete_section(const std::string& section);
 
+        void reload();
         void commit();
 
         std::string get_absolute_path() { return ini_path; }

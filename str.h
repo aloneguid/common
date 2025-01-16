@@ -58,6 +58,8 @@ namespace str {
 
     std::string base64_encode(unsigned char const* bytes_to_encode, unsigned int in_len);
 
+    std::string base64_encode(const std::string& input);
+
     std::string base64_decode(std::string const& encoded_string);
 
     std::string url_encode(const std::string& value);
@@ -85,6 +87,8 @@ namespace str {
      * @return 
     */
     bool contains_ic(const std::string& haystack, const std::string& needle);
+
+    bool equal_ic(const std::string& s1, const std::string& s2);
 
     /**
      * @brief Escapes pipe character in the string with backslash and pipe.

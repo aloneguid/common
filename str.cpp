@@ -260,6 +260,10 @@ namespace str {
 
     }
 
+    std::string base64_encode(const std::string& input) {
+        return base64_encode(reinterpret_cast<const unsigned char*>(input.c_str()), input.length());
+    }
+
     std::string base64_decode(const std::string& encoded_string) {
         int in_len = encoded_string.size();
         int i = 0;
@@ -433,6 +437,14 @@ namespace str {
             [](char ch1, char ch2) { return std::toupper(ch1) == std::toupper(ch2); }
         );
         return (it != haystack.end());
+    }
+
+    bool equal_ic(const std::string& s1, const std::string& s2) {
+        // Utility function to compare two strings ignoring case
+        return std::equal(s1.begin(), s1.end(), s2.begin(), s2.end(),
+            [](char a, char b) {
+                return std::tolower(a) == std::tolower(b);
+            });
     }
 
     std::string escape_pipe(const std::string& input) {
