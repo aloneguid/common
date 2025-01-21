@@ -3,8 +3,7 @@
 
 namespace win32
 {
-    class mutex
-    {
+    class mutex {
     public:
         mutex(std::string name);
         ~mutex();

@@ -4,7 +4,9 @@
 #include <string>
 
 namespace win32 {
-    // represents a minimal win32 app
+    /**
+     * @brief Represents a minimal win32 app.
+     */
     class app {
     public:
         app(const std::string& class_name = "AppMsgReceiver", const std::string& window_title = "Receiver");
@@ -34,6 +36,8 @@ namespace win32 {
         void set_max_fps_mode(bool v) { max_fps_mode = v; }
 
         bool install_low_level_keyboard_hook();
+
+        bool register_global_hotkey();
 
     private:
         WNDCLASSEX wc;

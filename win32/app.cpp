@@ -4,6 +4,9 @@
 
 using namespace std;
 
+// Define a unique identifier for the hotkey
+#define HOTKEY_ONE_ID 1
+
 namespace win32 {
 
     app* low_level_keyboard_hook_app{nullptr};
@@ -28,6 +31,12 @@ namespace win32 {
         }
 
         return hLLKHook != NULL;
+    }
+
+    bool app::register_global_hotkey() {
+        return RegisterHotKey(hwnd,
+            HOTKEY_ONE_ID, 
+            MOD_ALT, VK_SPACE);
     }
 
     LRESULT WINAPI win32::app::WndProc(
