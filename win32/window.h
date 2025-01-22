@@ -19,6 +19,8 @@ namespace win32 {
 
         static window get_foreground();
 
+        static window find_by_class_name(const std::string& class_name);
+
         std::string get_text();
 
         bool is_visible();

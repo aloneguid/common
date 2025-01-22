@@ -28,6 +28,12 @@ namespace win32 {
         return window{ ::GetForegroundWindow() };
     }
 
+    window window::find_by_class_name(const std::string& class_name) {
+        auto wcn = str::to_wstr(class_name);
+        HWND hwnd = ::FindWindow(wcn.c_str(), nullptr);
+        return window{hwnd};
+    }
+
     bool window::is_valid() {
         return ::IsWindow(hwnd);
     }
