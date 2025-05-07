@@ -114,6 +114,85 @@ namespace win32 {
         return pid;
     }
 
+    int process::exec(const std::string& cmdline, std::function<void(std::string&)> std_out_new_data) {
+        HANDLE hStdOutRead = nullptr, hStdOutWrite = nullptr;
+        SECURITY_ATTRIBUTES sa{};
+        sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+        sa.bInheritHandle = TRUE; // Allow the child process to inherit the handle
+        sa.lpSecurityDescriptor = nullptr;
+
+        // Create a pipe for the child process's standard output
+        if(!::CreatePipe(&hStdOutRead, &hStdOutWrite, &sa, 0)) {
+            return -1; // Failed to create pipe
+        }
+
+        // Ensure the read handle to the pipe is not inherited
+        if(!::SetHandleInformation(hStdOutRead, HANDLE_FLAG_INHERIT, 0)) {
+            ::CloseHandle(hStdOutRead);
+            ::CloseHandle(hStdOutWrite);
+            return -1; // Failed to set handle information
+        }
+
+        STARTUPINFO si{};
+        si.cb = sizeof(STARTUPINFO);
+        si.hStdOutput = hStdOutWrite; // Redirect standard output to the write end of the pipe
+        si.hStdError = hStdOutWrite;  // Redirect standard error to the same pipe
+        si.dwFlags |= STARTF_USESTDHANDLES;
+
+        PROCESS_INFORMATION pi{};
+        DWORD exit_code = -1;
+
+        // Convert the command line to a wide string
+        std::wstring wCmdline = str::to_wstr(cmdline);
+
+        // Create the child process
+        if(::CreateProcess(
+            nullptr,
+            const_cast<wchar_t*>(wCmdline.c_str()),
+            nullptr,
+            nullptr,
+            TRUE, // Inherit handles
+            0,
+            nullptr,
+            nullptr,
+            &si,
+            &pi)) {
+            // Close the write end of the pipe in the parent process
+            ::CloseHandle(hStdOutWrite);
+
+            // Read the output from the child process
+            char buffer[4096];
+            DWORD bytesRead;
+            while(::ReadFile(hStdOutRead, buffer, sizeof(buffer) - 1, &bytesRead, nullptr) && bytesRead > 0) {
+                buffer[bytesRead] = '\0'; // Null-terminate the buffer
+                string token{buffer};
+                std_out_new_data(token);
+            }
+
+            // Wait for the child process to exit
+            ::WaitForSingleObject(pi.hProcess, INFINITE);
+
+            // Get the exit code of the process
+            ::GetExitCodeProcess(pi.hProcess, &exit_code);
+
+            // Close handles
+            ::CloseHandle(pi.hProcess);
+            ::CloseHandle(pi.hThread);
+        } else {
+            // Failed to create process
+            ::CloseHandle(hStdOutWrite);
+        }
+
+        ::CloseHandle(hStdOutRead);
+        return static_cast<int>(exit_code);
+    }
+
+    int process::exec(const std::string& cmdline, string& std_out) {
+        return exec(cmdline, [&](string& token) {
+            std_out += token;
+        });
+    }
+
     std::string process::get_module_filename() const {
 
         string r;

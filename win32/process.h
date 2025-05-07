@@ -2,6 +2,7 @@
 #include <Windows.h>
 #include <string>
 #include <vector>
+#include <functional>
 
 namespace win32 {
     class process {
@@ -33,6 +34,23 @@ namespace win32 {
          * @return PID
         */
         static DWORD start(const std::string& cmdline, bool wait_for_exit = false);
+
+        /**
+         * @brief Executes a command line, captures output and adds to std_out
+         * @param cmdline
+         * @param std_out
+         * @return Process exit code
+        */
+        static int exec(const std::string& cmdline, std::string& std_out);
+
+        /**
+         * @brief Executes a command line, captures output and calls back
+         * @param cmdline
+         * @param std_out_new_data
+         * @return Process exit code
+        */
+        static int exec(const std::string& cmdline, std::function<void (std::string&)> std_out_new_data);
+
 
         std::string get_module_filename() const;
         std::string get_name() const;
