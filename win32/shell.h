@@ -36,6 +36,14 @@ namespace win32 {
 
         unsigned int get_dpi(HWND hWnd);
 
+        /**
+         * @brief Call file open dialog system-native to select a file
+         * @param file_type_name Display name of the file type, for example "Word Document"
+         * @param extension Extension of the file type, for example "*.doc". You can pass multiple extensions, for instance "*.doc;*.docx"
+         * @return Path to the selected file, or empty string if the user canceled the dialog
+         */
         std::string file_open_dialog(const std::string& file_type_name, const std::string& extension);
+
+        std::string file_save_dialog(const std::string& file_type_name, const std::string& extension);
     }
 }

@@ -287,5 +287,83 @@ namespace win32 {
 
             return path;
         }
+
+        std::string file_save_dialog(const std::string& file_type_name, const std::string& extension) {
+            // See https://learn.microsoft.com/en-us/windows/win32/shell/common-file-dialog#basic-usage
+
+            std::string path;
+
+            IFileDialog* pfd = nullptr;
+            HRESULT hr = ::CoCreateInstance(CLSID_FileSaveDialog, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pfd));
+            if(SUCCEEDED(hr)) {
+                // Create an event handling object, and hook it up to the dialog.
+                IFileDialogEvents* pfde = nullptr;
+                hr = ::CDialogEventHandler_CreateInstance(IID_PPV_ARGS(&pfde));
+                if(SUCCEEDED(hr)) {
+                    // Hook up the event handler.
+                    DWORD dwCookie;
+                    hr = pfd->Advise(pfde, &dwCookie);
+                    if(SUCCEEDED(hr)) {
+                        // Set the options on the dialog.
+                        DWORD dwFlags;
+
+                        // Before setting, always get the options first in order 
+                        // not to override existing options.
+                        hr = pfd->GetOptions(&dwFlags);
+                        if(SUCCEEDED(hr)) {
+                            // In this case, get shell items only for file system items.
+                            hr = pfd->SetOptions(dwFlags | FOS_FORCEFILESYSTEM);
+                            if(SUCCEEDED(hr)) {
+                                // Set the file types to display only.
+                                // Notice that this is a 1-based array.
+
+                                std::wstring flt_n = str::to_wstr(file_type_name);
+                                std::wstring flt_x = str::to_wstr(extension);
+                                COMDLG_FILTERSPEC rgSpec[] = {
+                                    { flt_n.c_str(), flt_x.c_str() }
+                                };
+
+                                hr = pfd->SetFileTypes(1, rgSpec);
+                                if(SUCCEEDED(hr)) {
+                                    // Set the selected file type index.
+                                    hr = pfd->SetFileTypeIndex(1);
+                                    if(SUCCEEDED(hr)) {
+                                        // Set the default extension.
+                                        hr = pfd->SetDefaultExtension(flt_x.c_str());
+                                        if(SUCCEEDED(hr)) {
+                                            // Show the dialog
+                                            hr = pfd->Show(NULL);
+                                            if(SUCCEEDED(hr)) {
+                                                // Obtain the result once the user clicks 
+                                                // the 'Save' button.
+                                                IShellItem* psiResult;
+                                                hr = pfd->GetResult(&psiResult);
+                                                if(SUCCEEDED(hr)) {
+                                                    // Get the file path selected by the user.
+                                                    PWSTR pszFilePath = NULL;
+                                                    hr = psiResult->GetDisplayName(SIGDN_FILESYSPATH, &pszFilePath);
+                                                    if(SUCCEEDED(hr)) {
+                                                        // User has made a positive selection here.
+                                                        path = str::to_str(pszFilePath);
+                                                        CoTaskMemFree(pszFilePath);
+                                                    }
+                                                    psiResult->Release();
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        // Unhook the event handler.
+                        pfd->Unadvise(dwCookie);
+                    }
+                }
+                pfd->Release();
+            }
+
+            return path;
+        }
+
     }
 }
