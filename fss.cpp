@@ -48,6 +48,14 @@ namespace fss
         return fl.tellg();
     }
 
+    std::string get_full_path(const std::string& path) {
+        if (path.empty() || !path.starts_with('.')) return path;
+
+        string r = path.substr(1);
+        r = get_current_dir() + r;
+        return r;
+    }
+
     bool read_binary_file(const std::string& name, unsigned char* buffer) {
         std::ifstream fl(name, std::ifstream::ate | std::ifstream::binary);
         if(!fl) return false;

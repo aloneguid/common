@@ -11,6 +11,8 @@ namespace fss
 
    size_t get_file_size(const std::string& name);
 
+   std::string get_full_path(const std::string& path);
+
    bool read_binary_file(const std::string& name, unsigned char* buffer);
 
    /// <summary>
