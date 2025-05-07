@@ -20,7 +20,26 @@ namespace fss
    /// </summary>
    std::string read_file_as_string(const std::string& name);
 
-   void write_file_as_string(const std::string& filename, const std::string& content);
+   /**
+    * @brief Writes all text to file, overwriting if exists.
+    * @param filename 
+    * @param contents 
+    */
+   void write_all_text(const std::string& filename, const std::string& contents);
+
+   /**
+    * @brief Writes all text to file, appending if exists.
+    * @param filename
+    * @param contents
+    */
+   void append_all_text(const std::string& filename, const std::string& contents);
+
+   /**
+    * @brief Calculates file age in seconds, from the creation time.
+    * @param filename 
+    * @return 
+    */
+   unsigned int get_age_in_seconds(const std::string& filename);
 
    std::string get_temp_file_path(const std::string& prefix = "TMP");
 

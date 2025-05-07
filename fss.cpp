@@ -7,6 +7,7 @@
 #include "str.h"
 #include <fstream>
 #include <vector>
+#include <filesystem>
 
 using namespace std;
 
@@ -76,12 +77,54 @@ namespace fss
         return string(bytes.data(), sz);
     }
 
-    void write_file_as_string(const std::string& filename, const std::string& content) {
+    void write_all_text(const std::string& filename, const std::string& contents) {
         ofstream ofs(filename, ios::out | ios::binary | ios::ate);
         if(!ofs) return;
 
-        ofs << content;
+        ofs << contents;
         ofs.flush();
+    }
+
+    void append_all_text(const std::string& filename, const std::string& contents) {
+        ofstream ofs(filename, ios::out | ios::binary | ios::ate | ios::app);
+        if(!ofs) return;
+        ofs << contents;
+        ofs.flush();
+    }
+
+    unsigned int get_age_in_seconds(const std::string& filename) {
+
+#if WIN32
+        WIN32_FILE_ATTRIBUTE_DATA fileInfo;
+
+        // Retrieve file attributes
+        if(!::GetFileAttributesExA(filename.c_str(), GetFileExInfoStandard, &fileInfo)) {
+            //throw std::runtime_error("Failed to get file attributes");
+            return 0;
+        }
+        FILETIME creationTime = fileInfo.ftCreationTime;
+
+        // get time now
+        SYSTEMTIME now;
+        ::GetSystemTime(&now);
+        FILETIME nowFileTime;
+        ::SystemTimeToFileTime(&now, &nowFileTime);
+
+        // get the difference in seconds
+        ULARGE_INTEGER nowTime;
+        ULARGE_INTEGER creationTimeInt;
+        nowTime.LowPart = nowFileTime.dwLowDateTime;
+        nowTime.HighPart = nowFileTime.dwHighDateTime;
+        creationTimeInt.LowPart = creationTime.dwLowDateTime;
+        creationTimeInt.HighPart = creationTime.dwHighDateTime;
+        ULARGE_INTEGER diff;
+        diff.QuadPart = nowTime.QuadPart - creationTimeInt.QuadPart;
+        unsigned int seconds = static_cast<unsigned int>(diff.QuadPart / 10000000ULL);
+        return seconds;
+    
+#endif
+
+        return 0;
     }
 
     std::string get_temp_file_path(const string& prefix) {

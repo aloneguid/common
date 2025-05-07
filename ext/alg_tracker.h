@@ -8,10 +8,11 @@ namespace alg
 {
     class tracker {
     public:
-        tracker(const std::string& app_name, const std::string& version);
+        tracker(const std::string& app_name, const std::string& version,
+            const std::string& cache_file_path = "", unsigned int max_cache_age_hours = 1);
         ~tracker();
 
-        void track(const std::map<std::string, std::string>& props, bool flush_now);
+        void track(const std::map<std::string, std::string>& props);
 
         void add_constant(std::string name, std::string value);
 
@@ -19,9 +20,12 @@ namespace alg
 
     private:
         win32::http h;
-        std::string url;
+        const std::string url;
         std::string version;
-        std::vector<std::string> queue;
         std::map<std::string, std::string> constants;
+        const std::string cache_file_path;
+        unsigned int max_cache_age_hours;
+
+        bool write_to_file(const std::string& body);
     };
 }
