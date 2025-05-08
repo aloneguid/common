@@ -244,6 +244,45 @@ namespace win32 {
         return FALSE;
     }
 
+    std::string process::get_description() const {
+        // Open the process to get its executable path
+        HANDLE hProcess = ::OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pid);
+        if(!hProcess) {
+            return "";
+        }
+
+        wchar_t exePath[MAX_PATH];
+        if(!::GetModuleFileNameEx(hProcess, nullptr, exePath, MAX_PATH)) {
+            CloseHandle(hProcess);
+            return "";
+        }
+
+        ::CloseHandle(hProcess);
+
+        // Get the size of the version information
+        DWORD dummy;
+        DWORD versionInfoSize = ::GetFileVersionInfoSize(exePath, &dummy);
+        if(versionInfoSize == 0) {
+            return "";
+        }
+
+        // Retrieve the version information
+        std::vector<char> versionInfo(versionInfoSize);
+        if(!::GetFileVersionInfo(exePath, 0, versionInfoSize, versionInfo.data())) {
+            return "";
+        }
+
+        // Query the "FileDescription" field
+        void* buffer = nullptr;
+        UINT size = 0;
+        if(VerQueryValue(versionInfo.data(), LR"(\StringFileInfo\040904b0\FileDescription)", &buffer, &size)) {
+            std::wstring result{static_cast<wchar_t*>(buffer), size};
+            return str::to_str(result);
+        }
+
+        return "";
+    }
+
     HWND process::find_main_window() {
         find_token t;
         t.process_id = pid;

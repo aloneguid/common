@@ -55,6 +55,12 @@ namespace win32 {
         std::string get_module_filename() const;
         std::string get_name() const;
 
+        /**
+         * @brief Gets process description similar to the one displayed in Windows Task Manager.
+         * @return 
+         */
+        std::string get_description() const;
+
         HWND find_main_window();
 
         void set_priority(DWORD priority_class = NORMAL_PRIORITY_CLASS);
