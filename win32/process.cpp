@@ -275,8 +275,8 @@ namespace win32 {
         // Query the "FileDescription" field
         void* buffer = nullptr;
         UINT size = 0;
-        if(VerQueryValue(versionInfo.data(), LR"(\StringFileInfo\040904b0\FileDescription)", &buffer, &size)) {
-            std::wstring result{static_cast<wchar_t*>(buffer), size};
+        if(VerQueryValue(versionInfo.data(), L"\\StringFileInfo\\040904b0\\FileDescription", &buffer, &size)) {
+            std::wstring result{static_cast<wchar_t*>(buffer)};
             return str::to_str(result);
         }
 
