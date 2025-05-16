@@ -4,6 +4,7 @@
 #include <string>
 
 namespace win32 {
+
     /**
      * @brief Represents a minimal win32 app.
      */
@@ -26,16 +27,12 @@ namespace win32 {
         // called from message loop (run()) when any message arrives
         std::function<void(MSG&)> on_message_loop_message;
 
-        // called when keyboard hook is installed, called with the following parameters:
-        // - 0. WPARAM - The identifier of one of the following messages: WM_KEYDOWN, WM_KEYUP, WM_SYSKEYDOWN, or WM_SYSKEYUP.
-        // - 1. KBDLLHOOKSTRUCT& - reference to the KBDLLHOOKSTRUCT structure, containing information about the low-level keyboard input event.
-        std::function<void(WPARAM, KBDLLHOOKSTRUCT&)> on_low_level_keyboard_hook;
-
         void set_message_timeout(size_t milliseconds = -1);
 
         void set_max_fps_mode(bool v) { max_fps_mode = v; }
 
-        bool install_low_level_keyboard_hook();
+        bool install_low_level_keyboard_hook(std::function<bool(UINT_PTR, KBDLLHOOKSTRUCT&)> fn);
+        bool install_low_level_mouse_hook(std::function<bool(UINT_PTR, POINT)> fn);
 
         bool register_global_hotkey();
 
@@ -48,5 +45,9 @@ namespace win32 {
 
         static LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
         static LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam);
+        static LRESULT CALLBACK LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lParam);
+
+        std::function<bool(UINT_PTR, KBDLLHOOKSTRUCT&)> on_low_level_keyboard_hook_func;
+        std::function<bool(UINT_PTR, POINT)> on_low_level_mouse_hook_func;
     };
 }

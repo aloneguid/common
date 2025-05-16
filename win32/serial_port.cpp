@@ -112,10 +112,10 @@ namespace win32 {
                 //error getting state
                 ::CloseHandle(hSerial);
             } else {
-                dcbSerialParams.BaudRate = CBR_9600;
-                dcbSerialParams.ByteSize = 8;
-                dcbSerialParams.StopBits = ONESTOPBIT;
-                dcbSerialParams.Parity = NOPARITY;
+                dcbSerialParams.BaudRate = baud_rate;
+                dcbSerialParams.ByteSize = byte_size;
+                dcbSerialParams.StopBits = stop_bits;
+                dcbSerialParams.Parity = parity;
                 if(!SetCommState(hSerial, &dcbSerialParams)) {
                     //error setting serial port state
                     ::CloseHandle(hSerial);

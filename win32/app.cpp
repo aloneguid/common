@@ -9,7 +9,7 @@ using namespace std;
 
 namespace win32 {
 
-    app* low_level_keyboard_hook_app{nullptr};
+    app* low_level_hook_app{nullptr};
 
     void app::set_message_timeout(size_t milliseconds) {
         if(milliseconds > 0) {
@@ -19,17 +19,31 @@ namespace win32 {
         }
     }
 
-    bool app::install_low_level_keyboard_hook() {
-        //HMODULE hModule = ::GetModuleHandle(NULL);
+    bool app::install_low_level_keyboard_hook(std::function<bool(UINT_PTR, KBDLLHOOKSTRUCT&)> fn) {
+        on_low_level_keyboard_hook_func = nullptr;
         HHOOK hLLKHook = ::SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, NULL, 0);
 
         if(hLLKHook) {
-            low_level_keyboard_hook_app = this;
+            low_level_hook_app = this;
+            on_low_level_keyboard_hook_func = fn;
         } else {
             // error
             string error = kernel::get_last_error_text();
         }
 
+        return hLLKHook != NULL;
+    }
+
+    bool app::install_low_level_mouse_hook(std::function<bool(UINT_PTR, POINT)> fn) {
+        on_low_level_mouse_hook_func = nullptr;
+        HHOOK hLLKHook = ::SetWindowsHookEx(WH_MOUSE_LL, LowLevelMouseProc, NULL, 0);
+        if(hLLKHook) {
+            low_level_hook_app = this;
+            on_low_level_mouse_hook_func = fn;
+        } else {
+            // error
+            string error = kernel::get_last_error_text();
+        }
         return hLLKHook != NULL;
     }
 
@@ -54,11 +68,36 @@ namespace win32 {
         return ::DefWindowProc(hWnd, msg, wParam, lParam);
     }
 
+    // https://learn.microsoft.com/en-us/windows/win32/winmsg/lowlevelkeyboardproc
     LRESULT app::LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
         if(nCode >= 0) {
-            if(low_level_keyboard_hook_app && low_level_keyboard_hook_app->on_low_level_keyboard_hook) {
-                KBDLLHOOKSTRUCT* p = (KBDLLHOOKSTRUCT*)lParam;
-                low_level_keyboard_hook_app->on_low_level_keyboard_hook(wParam, *p);
+            if(low_level_hook_app) {
+                if(low_level_hook_app->on_low_level_keyboard_hook_func) {
+                    KBDLLHOOKSTRUCT* p = (KBDLLHOOKSTRUCT*)lParam;
+                    if(low_level_hook_app->on_low_level_keyboard_hook_func(wParam, *p)) {
+                        return ::CallNextHookEx(NULL, nCode, wParam, lParam);
+                    } else {
+                        return 1; // block the event
+                    }
+                }
+            }
+        }
+        return ::CallNextHookEx(NULL, nCode, wParam, lParam);
+    }
+
+    // https://learn.microsoft.com/en-us/windows/win32/winmsg/lowlevelmouseproc
+    LRESULT app::LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lParam) {
+        if(nCode == HC_ACTION) {
+            if(low_level_hook_app) {
+                if(low_level_hook_app->on_low_level_mouse_hook_func) {
+                    MSLLHOOKSTRUCT* p = (MSLLHOOKSTRUCT*)lParam;
+                    POINT pt = p->pt;
+                    if(low_level_hook_app->on_low_level_mouse_hook_func(wParam, pt)) {
+                        return ::CallNextHookEx(NULL, nCode, wParam, lParam);
+                    } else {
+                        return 1; // block the event
+                    }
+                }
             }
         }
         return ::CallNextHookEx(NULL, nCode, wParam, lParam);
@@ -116,8 +155,8 @@ namespace win32 {
         if(hLLKHook) {
             ::UnhookWindowsHookEx(hLLKHook);
         }
-        if(low_level_keyboard_hook_app) {
-            low_level_keyboard_hook_app = nullptr;
+        if(low_level_hook_app) {
+            low_level_hook_app = nullptr;
         }
     }
 
