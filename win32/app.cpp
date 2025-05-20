@@ -34,7 +34,7 @@ namespace win32 {
         return hLLKHook != NULL;
     }
 
-    bool app::install_low_level_mouse_hook(std::function<bool(UINT_PTR, POINT)> fn) {
+    bool app::install_low_level_mouse_hook(std::function<bool(mouse_hook_data)> fn) {
         on_low_level_mouse_hook_func = nullptr;
         HHOOK hLLKHook = ::SetWindowsHookEx(WH_MOUSE_LL, LowLevelMouseProc, NULL, 0);
         if(hLLKHook) {
@@ -91,8 +91,17 @@ namespace win32 {
             if(low_level_hook_app) {
                 if(low_level_hook_app->on_low_level_mouse_hook_func) {
                     MSLLHOOKSTRUCT* p = (MSLLHOOKSTRUCT*)lParam;
-                    POINT pt = p->pt;
-                    if(low_level_hook_app->on_low_level_mouse_hook_func(wParam, pt)) {
+                    mouse_hook_data mhd{wParam, p->pt, 0};
+
+                    if(wParam == WM_MOUSEWHEEL) {
+                        // the high-order word of p->mouseData member is the wheel delta.
+                        // The low-order word is reserved.
+                        // A positive value indicates that the wheel was rotated forward, away from the user; a negative value indicates that the wheel was rotated backward, toward the user. One wheel click is defined as WHEEL_DELTA, which is 120.
+
+                        mhd.wheel_delta = (short)(HIWORD(p->mouseData));
+                    }
+
+                    if(low_level_hook_app->on_low_level_mouse_hook_func(mhd)) {
                         return ::CallNextHookEx(NULL, nCode, wParam, lParam);
                     } else {
                         return 1; // block the event

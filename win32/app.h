@@ -13,6 +13,12 @@ namespace win32 {
         app(const std::string& class_name = "AppMsgReceiver", const std::string& window_title = "Receiver");
         ~app();
 
+        struct mouse_hook_data {
+            UINT_PTR msg;
+            POINT pt;
+            short wheel_delta{0};
+        };
+
         HWND get_hwnd() { return hwnd; }
 
         // https://learn.microsoft.com/en-gb/windows/win32/api/winuser/nf-winuser-addclipboardformatlistener?redirectedfrom=MSDN
@@ -32,7 +38,7 @@ namespace win32 {
         void set_max_fps_mode(bool v) { max_fps_mode = v; }
 
         bool install_low_level_keyboard_hook(std::function<bool(UINT_PTR, KBDLLHOOKSTRUCT&)> fn);
-        bool install_low_level_mouse_hook(std::function<bool(UINT_PTR, POINT)> fn);
+        bool install_low_level_mouse_hook(std::function<bool(mouse_hook_data)> fn);
 
         bool register_global_hotkey();
 
@@ -48,6 +54,6 @@ namespace win32 {
         static LRESULT CALLBACK LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lParam);
 
         std::function<bool(UINT_PTR, KBDLLHOOKSTRUCT&)> on_low_level_keyboard_hook_func;
-        std::function<bool(UINT_PTR, POINT)> on_low_level_mouse_hook_func;
+        std::function<bool(mouse_hook_data)> on_low_level_mouse_hook_func;
     };
 }
