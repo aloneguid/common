@@ -9,7 +9,8 @@ using namespace std;
 
 namespace win32 {
 
-    app* low_level_hook_app{nullptr};
+    app* low_level_kbd_hook_app{nullptr};
+    app* low_level_mouse_hook_app{nullptr};
 
     void app::set_message_timeout(size_t milliseconds) {
         if(milliseconds > 0) {
@@ -20,37 +21,60 @@ namespace win32 {
     }
 
     bool app::install_low_level_keyboard_hook(std::function<bool(UINT_PTR, KBDLLHOOKSTRUCT&)> fn) {
-        on_low_level_keyboard_hook_func = nullptr;
-        HHOOK hLLKHook = ::SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, NULL, 0);
 
-        if(hLLKHook) {
-            low_level_hook_app = this;
+        uninstall_low_level_keyboard_hook();
+
+        on_low_level_keyboard_hook_func = nullptr;
+        hLLKbdHook = ::SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, NULL, 0);
+
+        if(hLLKbdHook) {
+            low_level_kbd_hook_app = this;
             on_low_level_keyboard_hook_func = fn;
         } else {
             // error
             string error = kernel::get_last_error_text();
         }
 
-        return hLLKHook != NULL;
+        return hLLKbdHook != NULL;
     }
 
     bool app::install_low_level_mouse_hook(std::function<bool(mouse_hook_data)> fn) {
+        uninstall_low_level_mouse_hook();
+
         on_low_level_mouse_hook_func = nullptr;
-        HHOOK hLLKHook = ::SetWindowsHookEx(WH_MOUSE_LL, LowLevelMouseProc, NULL, 0);
-        if(hLLKHook) {
-            low_level_hook_app = this;
+        hLLMouseHook = ::SetWindowsHookEx(WH_MOUSE_LL, LowLevelMouseProc, NULL, 0);
+        if(hLLMouseHook) {
+            low_level_mouse_hook_app = this;
             on_low_level_mouse_hook_func = fn;
         } else {
             // error
             string error = kernel::get_last_error_text();
         }
-        return hLLKHook != NULL;
+        return hLLMouseHook != NULL;
     }
 
-    bool app::register_global_hotkey() {
-        return RegisterHotKey(hwnd,
-            HOTKEY_ONE_ID, 
-            MOD_ALT, VK_SPACE);
+    void app::uninstall_low_level_keyboard_hook() {
+        // uninstall keyboard hook
+        if(hLLKbdHook) {
+            ::UnhookWindowsHookEx(hLLKbdHook);
+        }
+        low_level_kbd_hook_app = nullptr;
+    }
+
+    void app::uninstall_low_level_mouse_hook() {
+        // uninstall mouse hook
+        if(hLLMouseHook) {
+            ::UnhookWindowsHookEx(hLLMouseHook);
+        }
+        low_level_mouse_hook_app = nullptr;
+    }
+
+    string app::register_global_hotkey(int hotkey_id, unsigned int vk_code, unsigned int modifiers) {
+        BOOL ok = ::RegisterHotKey(hwnd,
+            hotkey_id, 
+            modifiers, vk_code);
+
+        return ok ? "" : kernel::get_last_error_text();
     }
 
     LRESULT WINAPI win32::app::WndProc(
@@ -71,10 +95,10 @@ namespace win32 {
     // https://learn.microsoft.com/en-us/windows/win32/winmsg/lowlevelkeyboardproc
     LRESULT app::LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
         if(nCode >= 0) {
-            if(low_level_hook_app) {
-                if(low_level_hook_app->on_low_level_keyboard_hook_func) {
+            if(low_level_kbd_hook_app) {
+                if(low_level_kbd_hook_app->on_low_level_keyboard_hook_func) {
                     KBDLLHOOKSTRUCT* p = (KBDLLHOOKSTRUCT*)lParam;
-                    if(low_level_hook_app->on_low_level_keyboard_hook_func(wParam, *p)) {
+                    if(low_level_kbd_hook_app->on_low_level_keyboard_hook_func(wParam, *p)) {
                         return ::CallNextHookEx(NULL, nCode, wParam, lParam);
                     } else {
                         return 1; // block the event
@@ -88,8 +112,8 @@ namespace win32 {
     // https://learn.microsoft.com/en-us/windows/win32/winmsg/lowlevelmouseproc
     LRESULT app::LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lParam) {
         if(nCode == HC_ACTION) {
-            if(low_level_hook_app) {
-                if(low_level_hook_app->on_low_level_mouse_hook_func) {
+            if(low_level_mouse_hook_app) {
+                if(low_level_mouse_hook_app->on_low_level_mouse_hook_func) {
                     MSLLHOOKSTRUCT* p = (MSLLHOOKSTRUCT*)lParam;
                     mouse_hook_data mhd{wParam, p->pt, 0};
 
@@ -101,7 +125,7 @@ namespace win32 {
                         mhd.wheel_delta = (short)(HIWORD(p->mouseData));
                     }
 
-                    if(low_level_hook_app->on_low_level_mouse_hook_func(mhd)) {
+                    if(low_level_mouse_hook_app->on_low_level_mouse_hook_func(mhd)) {
                         return ::CallNextHookEx(NULL, nCode, wParam, lParam);
                     } else {
                         return 1; // block the event
@@ -117,18 +141,18 @@ namespace win32 {
         wstring w_class_name = str::to_wstr(class_name);
 
         wc = {
-         sizeof(WNDCLASSEX),
-         CS_CLASSDC,
-         WndProc,
-         0L,
-         0L,
-         GetModuleHandle(nullptr),
-         nullptr,
-         nullptr,
-         nullptr,
-         nullptr,
-         w_class_name.c_str(),
-         nullptr
+            sizeof(WNDCLASSEX),
+            CS_CLASSDC,
+            WndProc,
+            0L,
+            0L,
+            GetModuleHandle(nullptr),
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            w_class_name.c_str(),
+            nullptr
         };
 
         if (!::RegisterClassEx(&wc))
@@ -161,12 +185,8 @@ namespace win32 {
         ::DestroyWindow(hwnd);
         ::UnregisterClass(wc.lpszClassName, wc.hInstance);
 
-        if(hLLKHook) {
-            ::UnhookWindowsHookEx(hLLKHook);
-        }
-        if(low_level_hook_app) {
-            low_level_hook_app = nullptr;
-        }
+        uninstall_low_level_keyboard_hook();
+        uninstall_low_level_mouse_hook();
     }
 
     void app::add_clipboard_listener() {

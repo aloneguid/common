@@ -21,6 +21,12 @@ namespace win32 {
 
         void display_notification(const std::string& title, const std::string& text);
 
+        /**
+         * @brief Updates icon by specifying a new icon name. When constructed, icon is loaded with "IDI_ICON1" name;
+         * @param pszName 
+         */
+        void update_icon(LPCWSTR pszName);
+
 
     private:
         HWND hwnd;

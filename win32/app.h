@@ -39,15 +39,25 @@ namespace win32 {
 
         bool install_low_level_keyboard_hook(std::function<bool(UINT_PTR, KBDLLHOOKSTRUCT&)> fn);
         bool install_low_level_mouse_hook(std::function<bool(mouse_hook_data)> fn);
+        void uninstall_low_level_keyboard_hook();
+        void uninstall_low_level_mouse_hook();
 
-        bool register_global_hotkey();
+        /**
+         * @brief Registers a global hotkey for this app. When pressed, it will send WM_HOTKEY message to this app's message queue. See https://learn.microsoft.com/en-us/windows/win32/inputdev/wm-hotkey on how to handle it. For full example see https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-registerhotkey#examples
+         * @param hotkey_id Unique ID for this hotkey. You can use it to identify which hotkey was pressed.
+         * @param vk_code Virtual key code. See https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
+         * @param modifiers Modifiers. See https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-registerhotkey
+         * @return empty string on success, or error message
+         */
+        std::string register_global_hotkey(int hotkey_id, unsigned int vk_code, unsigned int modifiers = 0);
 
     private:
         WNDCLASSEX wc;
         HWND hwnd{ nullptr };
         UINT_PTR timeout_timer_id{0};
         bool max_fps_mode{false};
-        HHOOK hLLKHook{nullptr};
+        HHOOK hLLKbdHook{nullptr};
+        HHOOK hLLMouseHook{nullptr};
 
         static LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
         static LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam);
