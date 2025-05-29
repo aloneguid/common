@@ -118,25 +118,21 @@ namespace win32::user {
         return (::GetKeyState(VK_CAPITAL) & 0x0001) != 0;
     }
 
-    bool is_app_light_theme(bool& value) {
+    bool is_app_light_theme() {
 
         string s = win32::reg::get_value(win32::reg::hive::current_user,
             "Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
             "AppsUseLightTheme");
 
-        value = s == "1";
-
-        return !s.empty();
+        return s.empty() || s == "1";
     }
 
-    bool is_system_light_theme(bool& value) {
+    bool is_system_light_theme() {
         string s = win32::reg::get_value(win32::reg::hive::current_user,
-        "Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
-        "SystemUsesLightTheme");
+            "Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+            "SystemUsesLightTheme");
 
-        value = s == "1";
-
-        return !s.empty();
+        return s.empty() || s == "1";
     }
 
     void message_box(const std::string& caption, const std::string& text) {

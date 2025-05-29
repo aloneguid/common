@@ -74,8 +74,8 @@ namespace win32 {
         static HMODULE hUxtheme = ::LoadLibraryW(L"uxtheme.dll");
         if(!hUxtheme) return;
 
-        auto SetPreferredAppMode = (SetPreferredAppModeFunc)GetProcAddress(hUxtheme, MAKEINTRESOURCEA(135));
-        auto AllowDarkModeForWindow = (AllowDarkModeForWindowFunc)GetProcAddress(hUxtheme, MAKEINTRESOURCEA(133));
+        auto SetPreferredAppMode = (SetPreferredAppModeFunc)::GetProcAddress(hUxtheme, MAKEINTRESOURCEA(135));
+        auto AllowDarkModeForWindow = (AllowDarkModeForWindowFunc)::GetProcAddress(hUxtheme, MAKEINTRESOURCEA(133));
 
         if(SetPreferredAppMode) SetPreferredAppMode(AllowDark);
         if(AllowDarkModeForWindow) AllowDarkModeForWindow(hwnd, TRUE);
@@ -85,8 +85,8 @@ namespace win32 {
 
         if (count == 0) return;
 
-        bool is_light;
-        if(!win32::user::is_system_light_theme(is_light)) is_light = true;
+        // check if the system is using a light theme, because popup menus are in the system UI, not app UI
+        bool is_light = win32::user::is_system_light_theme();
 
         if(!is_light) {
             enable_dark_mode_for_menu(h_wnd_owner);

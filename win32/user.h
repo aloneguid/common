@@ -27,11 +27,17 @@ namespace win32::user
     bool is_kbd_shift_down();
     bool is_kbd_caps_locks_on();
 
-    // returns true if app theme is set to Light
-    bool is_app_light_theme(bool& value);
+    /**
+     * @brief Determine if the application is running in Light theme.
+     * @return True if the application is using Light theme, false otherwise. If theme cannot be determined, returns true to default to Light theme.
+     */
+    bool is_app_light_theme();
 
-    // return true if system theme is set to Light
-    bool is_system_light_theme(bool& value);
+    /**
+     * @brief Determines whether the system is currently using a light theme.
+     * @return true if the system is using a light theme; otherwise, false. If the theme cannot be determined, returns true to default to light theme.
+     */
+    bool is_system_light_theme();
 
     void message_box(const std::string& caption, const std::string& text);
 }
