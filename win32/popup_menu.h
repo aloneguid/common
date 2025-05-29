@@ -10,7 +10,7 @@ namespace win32 {
         popup_menu(HWND h_wnd_owner);
         ~popup_menu();
 
-        void add(const std::string& id, const std::string& title, bool disabled = false);
+        void add(const std::string& id, const std::string& title, bool disabled = false, bool checked = false);
         void separator();
         void enter_submenu(const std::string& title);
         void exit_submenu();

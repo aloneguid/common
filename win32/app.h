@@ -51,6 +51,19 @@ namespace win32 {
          */
         std::string register_global_hotkey(int hotkey_id, unsigned int vk_code, unsigned int modifiers = 0);
 
+        void unregister_global_hotkey(int hotkey_id);
+
+        void unregister_all_global_hotkeys();
+
+        /**
+         * @brief Helper function to check if a message is a hotkey message for a specific hotkey ID.
+         * @param msg 
+         * @param wParam 
+         * @param hotkey_id 
+         * @return 
+         */
+        bool is_hotkey_message(UINT msg, WPARAM wParam, int hotkey_id) const;
+
     private:
         WNDCLASSEX wc;
         HWND hwnd{ nullptr };
@@ -58,6 +71,7 @@ namespace win32 {
         bool max_fps_mode{false};
         HHOOK hLLKbdHook{nullptr};
         HHOOK hLLMouseHook{nullptr};
+        std::vector<int> registered_hotkeys;  // to keep track of registered hotkeys, so we can unregister them on exit
 
         static LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
         static LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam);

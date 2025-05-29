@@ -1,5 +1,6 @@
 #include "popup_menu.h"
 #include "../str.h"
+#include "user.h"
 
 namespace win32 {
     popup_menu::popup_menu(HWND h_wnd_owner) 
@@ -13,11 +14,12 @@ namespace win32 {
         ::DestroyMenu(h_menu);
     }
 
-    void popup_menu::add(const std::string& id, const std::string& title, bool disabled) {
+    void popup_menu::add(const std::string& id, const std::string& title, bool disabled, bool checked) {
         auto loword_wparam = next_id++;
         loword_wparam_to_id[loword_wparam] = id;
         UINT flags = MF_BYPOSITION;
-        if (disabled) flags |= MF_DISABLED;
+        if(disabled) flags |= MF_DISABLED;
+        if(checked) flags |= MF_CHECKED;
         BOOL ok = ::InsertMenu(*h_menu_nesting.rbegin(),
             -1,
             flags, 
@@ -57,9 +59,38 @@ namespace win32 {
         return loword_wparam_to_id[loword_wparam];
     }
 
+    typedef BOOL(WINAPI* AllowDarkModeForWindowFunc)(HWND, BOOL);
+    typedef BOOL(WINAPI* SetPreferredAppModeFunc)(int);
+
+    enum PreferredAppMode {
+        Default,
+        AllowDark,
+        ForceDark,
+        ForceLight,
+        Max
+    };
+
+    void enable_dark_mode_for_menu(HWND hwnd) {
+        static HMODULE hUxtheme = ::LoadLibraryW(L"uxtheme.dll");
+        if(!hUxtheme) return;
+
+        auto SetPreferredAppMode = (SetPreferredAppModeFunc)GetProcAddress(hUxtheme, MAKEINTRESOURCEA(135));
+        auto AllowDarkModeForWindow = (AllowDarkModeForWindowFunc)GetProcAddress(hUxtheme, MAKEINTRESOURCEA(133));
+
+        if(SetPreferredAppMode) SetPreferredAppMode(AllowDark);
+        if(AllowDarkModeForWindow) AllowDarkModeForWindow(hwnd, TRUE);
+    }
+
     void popup_menu::show() {
 
         if (count == 0) return;
+
+        bool is_light;
+        if(!win32::user::is_system_light_theme(is_light)) is_light = true;
+
+        if(!is_light) {
+            enable_dark_mode_for_menu(h_wnd_owner);
+        }
 
         ::SetForegroundWindow(h_wnd_owner);
 

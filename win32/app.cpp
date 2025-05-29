@@ -74,7 +74,35 @@ namespace win32 {
             hotkey_id, 
             modifiers, vk_code);
 
-        return ok ? "" : kernel::get_last_error_text();
+        if(ok) {
+            // check if the hotkey is already in the list
+            if(std::find(registered_hotkeys.begin(), registered_hotkeys.end(), hotkey_id) == registered_hotkeys.end()) {
+                // add to the list
+                registered_hotkeys.push_back(hotkey_id);
+            }
+
+        }
+
+        return kernel::get_last_error_text();
+    }
+
+    void app::unregister_global_hotkey(int hotkey_id) {
+        // unregister the hotkey
+        if(::UnregisterHotKey(hwnd, hotkey_id)) {
+            // remove from the list
+            registered_hotkeys.erase(std::remove(registered_hotkeys.begin(), registered_hotkeys.end(), hotkey_id), registered_hotkeys.end());
+        }
+    }
+
+    void app::unregister_all_global_hotkeys() {
+        for(int hotkey_id : registered_hotkeys) {
+            ::UnregisterHotKey(hwnd, hotkey_id);
+        }
+        registered_hotkeys.clear();
+    }
+
+    bool app::is_hotkey_message(UINT msg, WPARAM wParam, int hotkey_id) const {
+        return msg == WM_HOTKEY && wParam == hotkey_id;
     }
 
     LRESULT WINAPI win32::app::WndProc(
@@ -187,6 +215,7 @@ namespace win32 {
 
         uninstall_low_level_keyboard_hook();
         uninstall_low_level_mouse_hook();
+        unregister_all_global_hotkeys();
     }
 
     void app::add_clipboard_listener() {
