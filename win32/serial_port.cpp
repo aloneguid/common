@@ -1,14 +1,47 @@
 #include "serial_port.h"
+#include <initguid.h>
 #include <SetupAPI.h>
+#include <devpkey.h>
 #include "str.h"
 #include "reg.h"
-
+#include "kernel.h"
 
 #pragma comment(lib, "setupapi.lib")
 
 namespace win32 {
 
     using namespace std;
+
+    string get_device_registry_property(HDEVINFO hDevInfoSet, SP_DEVINFO_DATA* devInfo, DWORD property) {
+        DWORD dwType{0};
+        DWORD dwSize{0};
+        //q uery initially to get the buffer size required
+        ::SetupDiGetDeviceRegistryPropertyW(hDevInfoSet, devInfo, property, &dwType, nullptr, 0, &dwSize);
+
+        std::vector<BYTE> value{dwSize, std::allocator<BYTE>{}}; //allocate buffer
+        if(SetupDiGetDeviceRegistryPropertyW(hDevInfoSet, devInfo, property, &dwType, value.data(), dwSize, &dwSize)) {
+            return str::to_str(reinterpret_cast<wchar_t*>(value.data()));
+        }
+
+    }
+
+    std::string get_device_property(HDEVINFO hDevInfoSet, SP_DEVINFO_DATA* devInfo, const DEVPROPKEY* property_key) {
+        DEVPROPTYPE propType;
+        WCHAR buffer[256];
+        DWORD requiredSize = 0;
+        if(SetupDiGetDevicePropertyW(
+            hDevInfoSet,
+            devInfo,
+            property_key,
+            &propType,
+            (PBYTE)buffer,
+            sizeof(buffer),
+            &requiredSize,
+            0)) {
+            return str::to_str(buffer);
+        }
+        return "";
+    }
 
     bool QueryUsingSetupAPI(const GUID& guid, _In_ DWORD dwFlags, vector<serial_port>& r) {
 
@@ -27,7 +60,6 @@ namespace win32 {
             has_more = SetupDiEnumDeviceInfo(hDevInfoSet, idx, &devInfo);
             if(has_more) {
                 string name;
-                string friendly_name;
 
                 // get the registry key which stores the ports settings in order to get port name (COM1, COM2, etc)
                 HKEY deviceKey = ::SetupDiOpenDevRegKey(hDevInfoSet, &devInfo, DICS_FLAG_GLOBAL, 0, DIREG_DEV, KEY_QUERY_VALUE);
@@ -37,20 +69,11 @@ namespace win32 {
                 }
 
                 // get the friendly name of the device (human readable name)
-                {
-                    DWORD dwType{0};
-                    DWORD dwSize{0};
-                    //q uery initially to get the buffer size required
-                    ::SetupDiGetDeviceRegistryPropertyW(hDevInfoSet, &devInfo, SPDRP_DEVICEDESC, &dwType, nullptr, 0, &dwSize);
-
-                    std::vector<BYTE> friendlyName{dwSize, std::allocator<BYTE>{}}; //allocate buffer
-                    if(SetupDiGetDeviceRegistryPropertyW(hDevInfoSet, &devInfo, SPDRP_DEVICEDESC, &dwType, friendlyName.data(), dwSize, &dwSize)) {
-                        friendly_name = str::to_str(reinterpret_cast<wchar_t*>(friendlyName.data()));
-                    }
-                }
+                string friendly_name = get_device_registry_property(hDevInfoSet, &devInfo, SPDRP_FRIENDLYNAME);
+                string description = get_device_property(hDevInfoSet, &devInfo, &DEVPKEY_Device_BusReportedDeviceDesc);
 
                 if(!name.empty()) {
-                    r.emplace_back(name, friendly_name);
+                    r.emplace_back(name, friendly_name, description);
                 }
 
             }
@@ -72,16 +95,31 @@ namespace win32 {
     }
 
     bool serial_port::send(const std::string& data) {
+        return send(data.data(), data.size());
+    }
+
+    bool serial_port::send(const char* data, size_t size) {
         if(!is_open) open();
-        if(!is_open) return false;
+        if(!is_open) {
+            return false;
+        }
 
         // send the data
         DWORD dwBytesWritten{0};
-        bool ok = WriteFile(hSerial, data.c_str(), data.size(), &dwBytesWritten, nullptr);
+        bool ok = WriteFile(hSerial, data, size, &dwBytesWritten, nullptr);
+        if(!ok) {
+            // handle error
+            throw std::exception(("write failed: " + win32::kernel::get_last_error_text()).c_str());
+        }
         return ok;
     }
 
+    bool serial_port::send(const std::vector<uint8_t> data) {
+        return send((const char*)data.data(), data.size());
+    }
+
     bool serial_port::recv(std::string& data, size_t size) {
+
         if(!is_open) open();
         if(!is_open) return false;
 
@@ -94,16 +132,24 @@ namespace win32 {
         return ok;
     }
 
+    void serial_port::purge() {
+        ::PurgeComm(hSerial, PURGE_RXCLEAR);
+        ::PurgeComm(hSerial, PURGE_TXCLEAR);
+    }
+
     void serial_port::open() {
-        wstring w_name = str::to_wstr(name);
+
+        // "COM10" and above: Must use "\\\\.\\COM10", "\\\\.\\COM14", etc.
+
+        string port_filename = name;
+        if(!port_filename.starts_with("\\\\.\\")) {
+            port_filename = "\\\\.\\" + port_filename;
+        }
+        wstring w_name = str::to_wstr(port_filename);
+
         hSerial = ::CreateFile(w_name.c_str(), GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr);
         if(hSerial == INVALID_HANDLE_VALUE) {
-            DWORD dwError{GetLastError()};
-            if(dwError == ERROR_FILE_NOT_FOUND) {
-                //serial port does not exist. Inform user.
-            } else {
-                //some other error occurred. Inform user.
-            }
+            throw std::exception(("can't open port: " + win32::kernel::get_last_error_text()).c_str());
         } else {
             // set the COM port settings
             DCB dcbSerialParams = {0};
@@ -116,6 +162,7 @@ namespace win32 {
                 dcbSerialParams.ByteSize = byte_size;
                 dcbSerialParams.StopBits = stop_bits;
                 dcbSerialParams.Parity = parity;
+                dcbSerialParams.fDtrControl = DTR_CONTROL_ENABLE; // enable DTR
                 if(!SetCommState(hSerial, &dcbSerialParams)) {
                     //error setting serial port state
                     ::CloseHandle(hSerial);
@@ -124,10 +171,16 @@ namespace win32 {
 
             // set timeouts
             COMMTIMEOUTS timeouts = {0};
+
             timeouts.ReadIntervalTimeout = 50;
             timeouts.ReadTotalTimeoutConstant = 50;
             timeouts.ReadTotalTimeoutMultiplier = 10;
-            timeouts.WriteTotalTimeoutConstant = 50;
+
+            //timeouts.ReadIntervalTimeout = MAXDWORD;
+            //timeouts.ReadTotalTimeoutMultiplier = 0;
+            //timeouts.ReadTotalTimeoutConstant = 0;
+
+            timeouts.WriteTotalTimeoutConstant = 500;
             timeouts.WriteTotalTimeoutMultiplier = 10;
             if(!SetCommTimeouts(hSerial, &timeouts)) {
                 //error setting timeouts

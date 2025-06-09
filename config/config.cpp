@@ -51,6 +51,19 @@ namespace common {
         return default_value;
     }
 
+    float config::get_float_value(const std::string& key, float default_value, const std::string& section) const {
+        string v = get_value(key, section);
+        if (!v.empty()) {
+            try {
+                return stof(v);
+            }
+            catch (...) {
+                return default_value;
+            }
+        }
+        return default_value;
+    }
+
     std::vector<std::string> config::get_all_values(const std::string& key, const std::string& section) {
         vector<string> r;
         list<CSimpleIni::Entry> ir;
@@ -81,6 +94,10 @@ namespace common {
         set_value(key, value ? "y" : "n", section);
     }
 
+    void config::set_value(const std::string& key, float value, const std::string& section) {
+        set_value(key, std::to_string(value), section);
+    }
+
     void config::delete_key(const std::string& key, const std::string& section) {
         ini.Delete(section.c_str(), key.c_str(), true);
         is_dirty = true;
@@ -96,6 +113,16 @@ namespace common {
         return r;
     }
 
+    std::vector<std::string> config::list_keys(const std::string& section) {
+        vector<string> r;
+        list<CSimpleIni::Entry> ir;
+        ini.GetAllKeys(section.c_str(), ir);
+        for(auto& s : ir) {
+            r.push_back(s.pItem);
+        }
+        return r;
+    }
+
     void config::delete_section(const std::string& section) {
         ini.Delete(section.c_str(), nullptr, true);
         is_dirty = true;
@@ -103,8 +130,6 @@ namespace common {
 
     void config::commit() {
         if (!is_dirty) return;
-
-
 
         ini.SaveFile(ini_path.c_str());
         is_dirty = false;
