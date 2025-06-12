@@ -16,7 +16,7 @@ namespace win32 {
         }
         ~serial_port() { close(); }
 
-        static std::vector<serial_port> enumerate();
+        static std::vector<serial_port> enumerate(DWORD default_baud_rate = CBR_9600);
 
         const std::string name;
         const std::string friendly_name;

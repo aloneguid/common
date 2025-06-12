@@ -90,11 +90,15 @@ namespace common {
         is_dirty = true;
     }
 
-    void config::set_bool_value(const std::string& key, bool value, const std::string& section) {
+    void config::set_value(const std::string& key, bool value, const std::string& section) {
         set_value(key, value ? "y" : "n", section);
     }
 
     void config::set_value(const std::string& key, float value, const std::string& section) {
+        set_value(key, std::to_string(value), section);
+    }
+
+    void config::set_value(const std::string& key, int value, const std::string& section) {
         set_value(key, std::to_string(value), section);
     }
 

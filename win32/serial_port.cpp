@@ -88,9 +88,14 @@ namespace win32 {
         return true;
     }
 
-    std::vector<serial_port> serial_port::enumerate() {
+    std::vector<serial_port> serial_port::enumerate(DWORD default_baud_rate) {
         vector<serial_port> r;
         QueryUsingSetupAPI(GUID_DEVINTERFACE_COMPORT, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE, r);
+
+        for(serial_port& port : r) {
+            port.baud_rate = default_baud_rate; // set default baud rate
+        }
+
         return r;
     }
 

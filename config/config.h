@@ -16,8 +16,9 @@ namespace common {
 
         void set_value(const std::string& key, const std::string& value, const std::string& section = "");
         void set_value(const std::string& key, const std::vector<std::string>& value, const std::string& section = "");
-        void set_bool_value(const std::string& key, bool value, const std::string& section = "");
+        void set_value(const std::string& key, bool value, const std::string& section = "");
         void set_value(const std::string& key, float value, const std::string& section = "");
+        void set_value(const std::string& key, int value, const std::string& section = "");
 
         void delete_key(const std::string& key, const std::string& section = "");
 
