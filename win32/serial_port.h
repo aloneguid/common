@@ -30,7 +30,7 @@ namespace win32 {
 
     private:
         bool is_open{false};
-        HANDLE hSerial{0};
+        HANDLE hSerial{INVALID_HANDLE_VALUE};
         DWORD baud_rate;
         BYTE byte_size;
         BYTE stop_bits;

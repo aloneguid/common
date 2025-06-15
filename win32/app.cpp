@@ -143,6 +143,9 @@ namespace win32 {
             if(low_level_mouse_hook_app) {
                 if(low_level_mouse_hook_app->on_low_level_mouse_hook_func) {
                     MSLLHOOKSTRUCT* p = (MSLLHOOKSTRUCT*)lParam;
+
+                    //bool is_injected = p->flags & LLMHF_INJECTED;
+                    
                     mouse_hook_data mhd{wParam, p->pt, 0};
 
                     if(wParam == WM_MOUSEWHEEL) {

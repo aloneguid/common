@@ -162,6 +162,7 @@ namespace win32 {
             if(!GetCommState(hSerial, &dcbSerialParams)) {
                 //error getting state
                 ::CloseHandle(hSerial);
+                hSerial = INVALID_HANDLE_VALUE;
             } else {
                 dcbSerialParams.BaudRate = baud_rate;
                 dcbSerialParams.ByteSize = byte_size;
@@ -171,7 +172,12 @@ namespace win32 {
                 if(!SetCommState(hSerial, &dcbSerialParams)) {
                     //error setting serial port state
                     ::CloseHandle(hSerial);
+                    hSerial = INVALID_HANDLE_VALUE;
                 }
+            }
+
+            if(hSerial == INVALID_HANDLE_VALUE) {
+                return;
             }
 
             // set timeouts
