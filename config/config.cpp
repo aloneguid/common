@@ -1,4 +1,5 @@
 #include "config.h"
+#include "config.h"
 #include "../fss.h"
 #include <list>
 #include <filesystem>
@@ -72,6 +73,10 @@ namespace common {
             r.push_back(e.pItem);
         }
         return r;
+    }
+
+    void config::set_value(const std::string& key, const char* value, const std::string& section) {
+        set_value(key, string{value}, section);
     }
 
     void config::set_value(const std::string& key, const std::string& value, const std::string& section) {

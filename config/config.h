@@ -14,6 +14,7 @@ namespace common {
         float get_float_value(const std::string& key, float default_value = 0.0f, const std::string& section = "") const;
         std::vector<std::string> get_all_values(const std::string& key, const std::string& section = "");
 
+        void set_value(const std::string& key, const char* value, const std::string& section = "");
         void set_value(const std::string& key, const std::string& value, const std::string& section = "");
         void set_value(const std::string& key, const std::vector<std::string>& value, const std::string& section = "");
         void set_value(const std::string& key, bool value, const std::string& section = "");

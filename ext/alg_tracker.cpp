@@ -31,7 +31,6 @@ namespace alg
 
         if(!constants.empty()) {
             for(const auto& pair : constants) {
-                if(pair.first.empty() || pair.second.empty()) continue;
                 props[pair.first] = pair.second;
             }
         }
@@ -51,6 +50,8 @@ namespace alg
     }
 
     void tracker::add_constant(std::string name, std::string value) {
+        if(name.empty() || value.empty()) return;
+
         constants[name] = value;
     }
 
