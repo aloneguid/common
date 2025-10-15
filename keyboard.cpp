@@ -303,6 +303,8 @@ namespace keyboard {
     
     wchar_t vk_to_wchar(unsigned long vk_code) {
 
+        if(vk_code == VK_RETURN) return L'\n';
+
         // GetKeyboardState() do not properly report state for modifier keys if the key event in a window other that one
         // from the current process, so we need to manually fetch the valid states manually using GetKeyState()
         // We do not actually need the state of the other key, so we do not event bother calling GetKeyboardState()
