@@ -22,6 +22,11 @@ namespace win32 {
         HWND get_hwnd() { return hwnd; }
 
         // https://learn.microsoft.com/en-gb/windows/win32/api/winuser/nf-winuser-addclipboardformatlistener?redirectedfrom=MSDN
+        
+        
+        /**
+         * @brief WM_CLIPBOARDUPDATE is sent when the content of the clipboard changes.
+         */
         void add_clipboard_listener();
 
         // runs message loop until WM_QUIT

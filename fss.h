@@ -1,8 +1,7 @@
 #pragma once
 #include <string>
 
-namespace fss
-{
+namespace fss {
    std::string get_current_dir();
 
    std::string get_current_exec_path();
