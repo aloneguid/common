@@ -11,6 +11,7 @@
 #include <PdhMsg.h>
 
 #pragma comment(lib, "pdh.lib")
+#pragma comment(lib, "version.lib")
 
 #define MAX_STR 1024
 #define STATUS_INFO_LENGTH_MISMATCH ((NTSTATUS)0xC0000004L)
