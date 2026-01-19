@@ -74,16 +74,17 @@ namespace win32 {
             hotkey_id, 
             modifiers, vk_code);
 
-        if(ok) {
-            // check if the hotkey is already in the list
-            if(std::find(registered_hotkeys.begin(), registered_hotkeys.end(), hotkey_id) == registered_hotkeys.end()) {
-                // add to the list
-                registered_hotkeys.push_back(hotkey_id);
-            }
-
+        if(!ok) {
+            return kernel::get_last_error_text();
         }
 
-        return kernel::get_last_error_text();
+        // check if the hotkey is already in the list
+        if(std::find(registered_hotkeys.begin(), registered_hotkeys.end(), hotkey_id) == registered_hotkeys.end()) {
+            // add to the list
+            registered_hotkeys.push_back(hotkey_id);
+        }
+
+        return "";
     }
 
     void app::unregister_global_hotkey(int hotkey_id) {

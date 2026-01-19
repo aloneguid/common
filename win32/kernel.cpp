@@ -2,7 +2,6 @@
 #include "../str.h"
 #include <Windows.h>
 #include <VersionHelpers.h>
-#include <fmt/core.h>
 
 namespace win32
 {
