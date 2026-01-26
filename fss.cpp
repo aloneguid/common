@@ -67,7 +67,7 @@ namespace fss
         return true;
     }
 
-    std::string read_file_as_string(const std::string& name) {
+    std::string read_all_text(const std::string& name) {
         ifstream ifs(name, ios::in | ios::binary | ios::ate);
         if(!ifs) return "";
         ifstream::pos_type sz = ifs.tellg();

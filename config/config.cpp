@@ -1,6 +1,4 @@
 #include "config.h"
-#include "config.h"
-#include "../fss.h"
 #include <list>
 #include <filesystem>
 
@@ -96,7 +94,9 @@ namespace common {
     }
 
     void config::set_value(const std::string& key, bool value, const std::string& section) {
-        set_value(key, value ? "y" : "n", section);
+        ini.Delete(section.c_str(), key.c_str());
+        if(value)
+            set_value(key, "y", section);
     }
 
     void config::set_value(const std::string& key, float value, const std::string& section) {

@@ -14,10 +14,15 @@ namespace fss {
 
    bool read_binary_file(const std::string& name, unsigned char* buffer);
 
-   /// <summary>
-   /// Reads file as string, returns empty string on error.
-   /// </summary>
-   std::string read_file_as_string(const std::string& name);
+   /**
+    * @brief Reads file as string, returns empty string on error.
+    * @param name 
+    * @return 
+    */
+   std::string read_all_text(const std::string& name);
+
+   // renamed to above function, for consistency
+   //std::string read_file_as_string(const std::string& name) { return read_all_text(name); }
 
    /**
     * @brief Writes all text to file, overwriting if exists.
