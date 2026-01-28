@@ -4,9 +4,6 @@
 
 using namespace std;
 
-// Define a unique identifier for the hotkey
-#define HOTKEY_ONE_ID 1
-
 namespace win32 {
 
     app* low_level_kbd_hook_app{nullptr};
@@ -104,6 +101,10 @@ namespace win32 {
 
     bool app::is_hotkey_message(UINT msg, WPARAM wParam, int hotkey_id) const {
         return msg == WM_HOTKEY && wParam == hotkey_id;
+    }
+
+    int app::is_hotkey_message(UINT msg, WPARAM wParam) const {
+        return msg == WM_HOTKEY ? (int)wParam : 0;
     }
 
     LRESULT WINAPI win32::app::WndProc(

@@ -69,6 +69,14 @@ namespace win32 {
          */
         bool is_hotkey_message(UINT msg, WPARAM wParam, int hotkey_id) const;
 
+        /**
+         * @brief Helper function to check if a message is a hotkey message.
+         * @param msg 
+         * @param wParam 
+         * @return 0 if not a hotkey message, or hotkey ID if it is.
+         */
+        int is_hotkey_message(UINT msg, WPARAM wParam) const;
+
     private:
         WNDCLASSEX wc;
         HWND hwnd{ nullptr };
