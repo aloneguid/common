@@ -95,8 +95,7 @@ namespace common {
 
     void config::set_value(const std::string& key, bool value, const std::string& section) {
         ini.Delete(section.c_str(), key.c_str());
-        if(value)
-            set_value(key, "y", section);
+        set_value(key, value ? "y" : "n", section);
     }
 
     void config::set_value(const std::string& key, float value, const std::string& section) {
