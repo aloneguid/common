@@ -1,5 +1,5 @@
 #include "app.h"
-#include "kernel.h"
+#include "os.h"
 #include "../str.h"
 
 using namespace std;
@@ -29,7 +29,7 @@ namespace win32 {
             on_low_level_keyboard_hook_func = fn;
         } else {
             // error
-            string error = kernel::get_last_error_text();
+            string error = os::get_last_error_text();
         }
 
         return hLLKbdHook != NULL;
@@ -45,7 +45,7 @@ namespace win32 {
             on_low_level_mouse_hook_func = fn;
         } else {
             // error
-            string error = kernel::get_last_error_text();
+            string error = os::get_last_error_text();
         }
         return hLLMouseHook != NULL;
     }
@@ -66,45 +66,97 @@ namespace win32 {
         low_level_mouse_hook_app = nullptr;
     }
 
-    string app::register_global_hotkey(int hotkey_id, unsigned int vk_code, unsigned int modifiers) {
-        BOOL ok = ::RegisterHotKey(hwnd,
-            hotkey_id, 
-            modifiers, vk_code);
+    bool app::register_global_hotkey(const string& hotkey, string& error_msg) {
+        // parse hotkey to vk_code and modifiers
+        unsigned int vk_code{0};
+        unsigned int modifiers{0};
 
-        if(!ok) {
-            return kernel::get_last_error_text();
+        vector<string> parts = str::split(hotkey, "+");
+        for(const string& part : parts) {
+            string pt = part;
+            str::trim(pt);
+            if(pt.empty()) continue;
+
+            if(pt == "ctrl") {
+                modifiers |= MOD_CONTROL;
+            } else if(pt == "alt") {
+                modifiers |= MOD_ALT;
+            } else if(pt == "shift") {
+                modifiers |= MOD_SHIFT;
+            } else if(pt[0] >= '0' && pt[0] <= '9') {
+                vk_code = pt[0];
+            } else if(pt[0] >= 'A' && pt[0] <= 'Z') {
+                vk_code = pt[0];
+            } else if(pt[0] == 'F' && pt.size() > 1) {
+                int f_num = std::stoi(pt.substr(1));
+                if(f_num >= 1 && f_num <= 12) {
+                    vk_code = VK_F1 + f_num - 1;
+                }
+            }
         }
 
-        // check if the hotkey is already in the list
-        if(std::find(registered_hotkeys.begin(), registered_hotkeys.end(), hotkey_id) == registered_hotkeys.end()) {
-            // add to the list
-            registered_hotkeys.push_back(hotkey_id);
+        if(modifiers && vk_code) {
+            // get smallest unused hotkey ID starting from 1
+            int id = 1;
+            bool found{true};
+            while(!found) {
+                for(auto& [used_id, used_hotkey] : hotkey_id_to_name) {
+                    if(used_id == id) {
+                        id = used_id + 1;
+                        found = false;
+                        break;
+                    }
+                }
+                found = true;
+            }
+
+            BOOL ok = ::RegisterHotKey(hwnd,
+                id,
+                modifiers, vk_code);
+
+            if(!ok) {
+                error_msg = os::get_last_error_text();
+                return false;
+            }
+
+            hotkey_id_to_name.emplace_back(id, hotkey);
+            return true;
         }
 
-        return "";
+        error_msg = "Invalid hotkey format";
+        return false;
     }
 
-    void app::unregister_global_hotkey(int hotkey_id) {
+    void app::unregister_global_hotkey(const std::string& hotkey) {
+
+        int pos = -1;
+        int id = 0;
+        for(int i = 0; i < hotkey_id_to_name.size(); i++) {
+            auto& [hotkey_id, hotkey_name] = hotkey_id_to_name[i];
+            if(hotkey_name == hotkey) {
+                pos = i;
+                id = hotkey_id;
+                break;
+            }
+        }
+
+        if(id == 0) {
+            // not found
+            return;
+        }
+
         // unregister the hotkey
-        if(::UnregisterHotKey(hwnd, hotkey_id)) {
+        if(::UnregisterHotKey(hwnd, id)) {
             // remove from the list
-            registered_hotkeys.erase(std::remove(registered_hotkeys.begin(), registered_hotkeys.end(), hotkey_id), registered_hotkeys.end());
+            hotkey_id_to_name.erase(hotkey_id_to_name.begin() + pos);
         }
     }
 
     void app::unregister_all_global_hotkeys() {
-        for(int hotkey_id : registered_hotkeys) {
+        for(auto& [hotkey_id, hotkey_name] : hotkey_id_to_name) {
             ::UnregisterHotKey(hwnd, hotkey_id);
         }
-        registered_hotkeys.clear();
-    }
-
-    bool app::is_hotkey_message(UINT msg, WPARAM wParam, int hotkey_id) const {
-        return msg == WM_HOTKEY && wParam == hotkey_id;
-    }
-
-    int app::is_hotkey_message(UINT msg, WPARAM wParam) const {
-        return msg == WM_HOTKEY ? (int)wParam : 0;
+        hotkey_id_to_name.clear();
     }
 
     LRESULT WINAPI win32::app::WndProc(
@@ -113,10 +165,23 @@ namespace win32 {
 
         // get "this"
         app* app_this = (app*)::GetProp(hWnd, L"this");
-        if (app_this && app_this->on_app_window_message) {
-            LRESULT res = app_this->on_app_window_message(msg, wParam, lParam);
+        if (app_this) {
 
-            return res == 0 ? ::DefWindowProc(hWnd, msg, wParam, lParam) : res;
+            if(msg == WM_HOTKEY && app_this->on_global_hotkey_pressed) {
+                int hotkey_id = (int)wParam;
+                for(const auto& [id, hotkey_name] : app_this->hotkey_id_to_name) {
+                    if(id == hotkey_id) {
+                        app_this->on_global_hotkey_pressed(hotkey_name);
+                        break;
+                    }
+                }
+            }
+
+            if(app_this->on_app_window_message) {
+                LRESULT res = app_this->on_app_window_message(msg, wParam, lParam);
+                return res == 0 ? ::DefWindowProc(hWnd, msg, wParam, lParam) : res;
+            }
+
         }
 
         return ::DefWindowProc(hWnd, msg, wParam, lParam);

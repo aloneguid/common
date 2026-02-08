@@ -2,6 +2,7 @@
 #include <Windows.h>
 #include <functional>
 #include <string>
+#include <map>
 
 namespace win32 {
 
@@ -38,6 +39,8 @@ namespace win32 {
         // called from message loop (run()) when any message arrives
         std::function<void(MSG&)> on_message_loop_message;
 
+        std::function<void(const std::string&)> on_global_hotkey_pressed;
+
         void set_message_timeout(size_t milliseconds = -1);
 
         void set_max_fps_mode(bool v) { max_fps_mode = v; }
@@ -48,34 +51,16 @@ namespace win32 {
         void uninstall_low_level_mouse_hook();
 
         /**
-         * @brief Registers a global hotkey for this app. When pressed, it will send WM_HOTKEY message to this app's message queue. See https://learn.microsoft.com/en-us/windows/win32/inputdev/wm-hotkey on how to handle it. For full example see https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-registerhotkey#examples
+         * @brief Same as above, but takes hotkey in human readable format, e.g. "ctrl+shift+A"
          * @param hotkey_id Unique ID for this hotkey. You can use it to identify which hotkey was pressed.
-         * @param vk_code Virtual key code. See https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
-         * @param modifiers Modifiers. See https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-registerhotkey
-         * @return empty string on success, or error message
-         */
-        std::string register_global_hotkey(int hotkey_id, unsigned int vk_code, unsigned int modifiers = 0);
-
-        void unregister_global_hotkey(int hotkey_id);
-
-        void unregister_all_global_hotkeys();
-
-        /**
-         * @brief Helper function to check if a message is a hotkey message for a specific hotkey ID.
-         * @param msg 
-         * @param wParam 
-         * @param hotkey_id 
+         * @param hotkey Human readable hotkey string. Supported format is combination of modifiers (ctrl, alt, shift) and a key, separated by "+", e.g. "ctrl+shift+A". Supported keys are letters, numbers and F1-F12. Modifiers can be in any order, but key must be at the end. Example valid hotkeys: "ctrl+shift+A", "alt+F4", "shift+1". Example invalid hotkeys: "A+ctrl", "ctrl+alt", "ctrl+shift".
          * @return 
          */
-        bool is_hotkey_message(UINT msg, WPARAM wParam, int hotkey_id) const;
+        bool register_global_hotkey(const std::string& hotkey, std::string& error_msg);
 
-        /**
-         * @brief Helper function to check if a message is a hotkey message.
-         * @param msg 
-         * @param wParam 
-         * @return 0 if not a hotkey message, or hotkey ID if it is.
-         */
-        int is_hotkey_message(UINT msg, WPARAM wParam) const;
+        void unregister_global_hotkey(const std::string& hotkey);
+
+        void unregister_all_global_hotkeys();
 
     private:
         WNDCLASSEX wc;
@@ -84,7 +69,8 @@ namespace win32 {
         bool max_fps_mode{false};
         HHOOK hLLKbdHook{nullptr};
         HHOOK hLLMouseHook{nullptr};
-        std::vector<int> registered_hotkeys;  // to keep track of registered hotkeys, so we can unregister them on exit
+        //std::vector<int> registered_hotkeys;  // to keep track of registered hotkeys, so we can unregister them on exit
+        std::vector<std::pair<int, std::string>> hotkey_id_to_name; // to keep track of the registered hotkeys
 
         static LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
         static LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam);
