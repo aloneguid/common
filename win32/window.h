@@ -45,8 +45,17 @@ namespace win32 {
 
         void restore();
 
-        // Minimize this window. Note that some windows like Task Manager (system app) do not respond to this.
+        /**
+         * @brief Minimize this window.Note that some windows like Task Manager(system app) do not respond to this.
+         */
         void minimize();
+
+        /**
+         * @brief Mark the window as ecluded from video capture. This is useful to display in-app control that should not be recorded by screen recording software.
+         * @param exclude set/unset.
+         * @return True if operation was successful.
+         */
+        bool exclude_from_capture(bool exclude);
 
     private:
         HWND hwnd;

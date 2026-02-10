@@ -94,4 +94,8 @@ namespace win32 {
         LONG styles = get_styles();
         return styles & WS_MINIMIZE;
     }
+
+    bool window::exclude_from_capture(bool exclude) {
+        return ::SetWindowDisplayAffinity(hwnd, exclude ? WDA_EXCLUDEFROMCAPTURE : WDA_NONE);
+    }
 }

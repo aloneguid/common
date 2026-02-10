@@ -97,18 +97,18 @@ namespace win32 {
 
         if(modifiers && vk_code) {
             // get smallest unused hotkey ID starting from 1
-            int id = 1;
-            bool found{true};
-            while(!found) {
+            int id{0};
+            bool valid_id;
+            do {
+                id += 1;
+                valid_id = true;
                 for(auto& [used_id, used_hotkey] : hotkey_id_to_name) {
                     if(used_id == id) {
-                        id = used_id + 1;
-                        found = false;
+                        valid_id = false;
                         break;
                     }
                 }
-                found = true;
-            }
+            } while(!valid_id);
 
             BOOL ok = ::RegisterHotKey(hwnd,
                 id,

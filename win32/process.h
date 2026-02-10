@@ -5,6 +5,10 @@
 #include <functional>
 
 namespace win32 {
+
+    /**
+     * @brief Process management functions
+     */
     class process {
     public:
         /**

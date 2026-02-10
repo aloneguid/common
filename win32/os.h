@@ -39,4 +39,10 @@ namespace win32::os {
      * @return 
      */
     std::string get_pressed_keys_text();
+
+    // clipboard
+
+    static void set_clipboard_text(const std::string& text);
+
+    static std::string get_clipboard_text();
 }
