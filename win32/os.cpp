@@ -225,6 +225,15 @@ namespace win32::os {
         return r;
     }
 
+    bool get_mouse_pos(long& x, long& y) {
+        POINT pt;
+        if(!::GetCursorPos(&pt)) return false;
+
+        x = pt.x;
+        y = pt.y;
+        return true;
+    }
+
     void set_clipboard_text(const std::string& text) {
         if(!::OpenClipboard(nullptr)) return;
         if(!::EmptyClipboard()) return;

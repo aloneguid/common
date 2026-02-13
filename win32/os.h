@@ -40,6 +40,8 @@ namespace win32::os {
      */
     std::string get_pressed_keys_text();
 
+    bool get_mouse_pos(long& x, long& y);
+
     // clipboard
 
     static void set_clipboard_text(const std::string& text);
