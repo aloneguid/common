@@ -269,4 +269,111 @@ namespace win32::os {
 
         return str::to_str(r);
     }
+
+    bool capture_screen(int& width, int& height, std::vector<unsigned char>& out_pixels) {
+        // get screen dimensions
+        int w = ::GetSystemMetrics(SM_CXSCREEN);
+        int h = ::GetSystemMetrics(SM_CYSCREEN);
+        if (w <= 0 || h <= 0) return false;
+
+        // initialize outputs
+        width = w;
+        height = h;
+        out_pixels.clear();
+
+        HDC hScreenDC = ::GetDC(nullptr);
+        if (!hScreenDC) return false;
+
+        HDC hMemDC = ::CreateCompatibleDC(hScreenDC);
+        if (!hMemDC) {
+            ::ReleaseDC(nullptr, hScreenDC);
+            return false;
+        }
+
+        HBITMAP hBitmap = ::CreateCompatibleBitmap(hScreenDC, w, h);
+        if (!hBitmap) {
+            ::DeleteDC(hMemDC);
+            ::ReleaseDC(nullptr, hScreenDC);
+            return false;
+        }
+
+        HGDIOBJ oldBmp = ::SelectObject(hMemDC, hBitmap);
+
+        // copy screen into bitmap (include layered windows)
+        if (!::BitBlt(hMemDC, 0, 0, w, h, hScreenDC, 0, 0, SRCCOPY | CAPTUREBLT)) {
+            // cleanup
+            ::SelectObject(hMemDC, oldBmp);
+            ::DeleteObject(hBitmap);
+            ::DeleteDC(hMemDC);
+            ::ReleaseDC(nullptr, hScreenDC);
+            return false;
+        }
+
+        // prepare BITMAPINFO for 24bpp
+        BITMAPINFO bmi{};
+        bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+        bmi.bmiHeader.biWidth = w;
+        bmi.bmiHeader.biHeight = h; // positive -> bottom-up (BMP standard)
+        bmi.bmiHeader.biPlanes = 1;
+        bmi.bmiHeader.biBitCount = 24;
+        bmi.bmiHeader.biCompression = BI_RGB;
+        bmi.bmiHeader.biSizeImage = 0; // can be 0 for BI_RGB
+
+        // compute padded row size (each scanline padded to 4 bytes)
+        int rowSize = ((w * 3 + 3) / 4) * 4;
+        size_t pixelDataSize = static_cast<size_t>(rowSize) * static_cast<size_t>(h);
+
+        std::vector<unsigned char> pixels;
+        try {
+            pixels.resize(pixelDataSize);
+        } catch (...) {
+            ::SelectObject(hMemDC, oldBmp);
+            ::DeleteObject(hBitmap);
+            ::DeleteDC(hMemDC);
+            ::ReleaseDC(nullptr, hScreenDC);
+            return false;
+        }
+
+        // retrieve bits into buffer
+        int ret = ::GetDIBits(hMemDC, hBitmap, 0, h, pixels.data(), &bmi, DIB_RGB_COLORS);
+        if (ret == 0) {
+            // cleanup
+            ::SelectObject(hMemDC, oldBmp);
+            ::DeleteObject(hBitmap);
+            ::DeleteDC(hMemDC);
+            ::ReleaseDC(nullptr, hScreenDC);
+            return false;
+        }
+
+        // build BMP file header
+        BITMAPFILEHEADER bfh{};
+        bfh.bfType = 0x4D42; // 'BM'
+        bfh.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
+        bfh.bfSize = static_cast<DWORD>(bfh.bfOffBits + pixelDataSize);
+        bfh.bfReserved1 = 0;
+        bfh.bfReserved2 = 0;
+
+        // assemble output vector: file header + info header + pixel data
+        out_pixels.resize(static_cast<size_t>(bfh.bfSize));
+        unsigned char* p = out_pixels.data();
+
+        // copy BITMAPFILEHEADER (14 bytes)
+        memcpy(p, &bfh, sizeof(BITMAPFILEHEADER));
+        p += sizeof(BITMAPFILEHEADER);
+
+        // copy BITMAPINFOHEADER (40 bytes)
+        memcpy(p, &bmi.bmiHeader, sizeof(BITMAPINFOHEADER));
+        p += sizeof(BITMAPINFOHEADER);
+
+        // copy pixel data
+        memcpy(p, pixels.data(), pixelDataSize);
+
+        // cleanup GDI
+        ::SelectObject(hMemDC, oldBmp);
+        ::DeleteObject(hBitmap);
+        ::DeleteDC(hMemDC);
+        ::ReleaseDC(nullptr, hScreenDC);
+
+        return true;
+    }
 }

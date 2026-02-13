@@ -20,9 +20,9 @@ namespace win32::os {
     std::string create_guid();
 
     /**
- * @brief Get current CPU usage in percentage
- * @return value 0-100, or -1 in case of failure
-*/
+     * @brief Get current CPU usage in percentage
+     * @return value 0-100, or -1 in case of failure
+    */
     static double get_cpu_usage_perc();
 
     // process
@@ -47,4 +47,8 @@ namespace win32::os {
     static void set_clipboard_text(const std::string& text);
 
     static std::string get_clipboard_text();
+
+    // imaging
+
+    bool capture_screen(int& width, int& height, std::vector<unsigned char>& out_pixels);
 }
