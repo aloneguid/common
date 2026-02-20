@@ -51,4 +51,10 @@ namespace win32::os {
     // imaging
 
     bool capture_screen(int& width, int& height, std::vector<unsigned char>& out_pixels);
+
+    /**
+     * @brief Captures entire screen and copies it to clipboard as bitmap. Returns true on success, false on failure.
+     * @return 
+     */
+    bool capture_screen_to_clipboard();
 }

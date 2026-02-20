@@ -236,7 +236,10 @@ namespace win32::os {
 
     void set_clipboard_text(const std::string& text) {
         if(!::OpenClipboard(nullptr)) return;
-        if(!::EmptyClipboard()) return;
+        if(!::EmptyClipboard()) {
+            ::CloseClipboard();
+            return;
+        }
         HGLOBAL gh = ::GlobalAlloc(GMEM_MOVEABLE, text.size() + 1);
         if(!gh) {
             ::CloseClipboard();
@@ -244,9 +247,11 @@ namespace win32::os {
         }
         memcpy(::GlobalLock(gh), text.c_str(), text.size() + 1);
         ::GlobalUnlock(gh);
-        ::SetClipboardData(CF_TEXT, gh);
+        HANDLE hResult = ::SetClipboardData(CF_TEXT, gh);
         ::CloseClipboard();
-        ::GlobalFree(gh);
+        if(!hResult) {
+            ::GlobalFree(gh);
+        }
     }
 
     std::string get_clipboard_text() {
@@ -270,80 +275,78 @@ namespace win32::os {
         return str::to_str(r);
     }
 
+    // RAII wrapper for screen capture GDI resources
+    struct screen_capture_ctx {
+        int w{0}, h{0};
+        HDC hScreenDC{nullptr};
+        HDC hMemDC{nullptr};
+        HBITMAP hBitmap{nullptr};
+        HGDIOBJ oldBmp{nullptr};
+        bool valid{false};
+
+        screen_capture_ctx() {
+            w = ::GetSystemMetrics(SM_CXSCREEN);
+            h = ::GetSystemMetrics(SM_CYSCREEN);
+            if (w <= 0 || h <= 0) return;
+
+            hScreenDC = ::GetDC(nullptr);
+            if (!hScreenDC) return;
+
+            hMemDC = ::CreateCompatibleDC(hScreenDC);
+            if (!hMemDC) return;
+
+            hBitmap = ::CreateCompatibleBitmap(hScreenDC, w, h);
+            if (!hBitmap) return;
+
+            oldBmp = ::SelectObject(hMemDC, hBitmap);
+
+            if (::BitBlt(hMemDC, 0, 0, w, h, hScreenDC, 0, 0, SRCCOPY | CAPTUREBLT))
+                valid = true;
+        }
+
+        ~screen_capture_ctx() {
+            if (oldBmp && hMemDC) ::SelectObject(hMemDC, oldBmp);
+            if (hBitmap) ::DeleteObject(hBitmap);
+            if (hMemDC) ::DeleteDC(hMemDC);
+            if (hScreenDC) ::ReleaseDC(nullptr, hScreenDC);
+        }
+
+        screen_capture_ctx(const screen_capture_ctx&) = delete;
+        screen_capture_ctx& operator=(const screen_capture_ctx&) = delete;
+    };
+
     bool capture_screen(int& width, int& height, std::vector<unsigned char>& out_pixels) {
-        // get screen dimensions
-        int w = ::GetSystemMetrics(SM_CXSCREEN);
-        int h = ::GetSystemMetrics(SM_CYSCREEN);
-        if (w <= 0 || h <= 0) return false;
+        screen_capture_ctx ctx;
+        if (!ctx.valid) return false;
 
-        // initialize outputs
-        width = w;
-        height = h;
+        width = ctx.w;
+        height = ctx.h;
         out_pixels.clear();
-
-        HDC hScreenDC = ::GetDC(nullptr);
-        if (!hScreenDC) return false;
-
-        HDC hMemDC = ::CreateCompatibleDC(hScreenDC);
-        if (!hMemDC) {
-            ::ReleaseDC(nullptr, hScreenDC);
-            return false;
-        }
-
-        HBITMAP hBitmap = ::CreateCompatibleBitmap(hScreenDC, w, h);
-        if (!hBitmap) {
-            ::DeleteDC(hMemDC);
-            ::ReleaseDC(nullptr, hScreenDC);
-            return false;
-        }
-
-        HGDIOBJ oldBmp = ::SelectObject(hMemDC, hBitmap);
-
-        // copy screen into bitmap (include layered windows)
-        if (!::BitBlt(hMemDC, 0, 0, w, h, hScreenDC, 0, 0, SRCCOPY | CAPTUREBLT)) {
-            // cleanup
-            ::SelectObject(hMemDC, oldBmp);
-            ::DeleteObject(hBitmap);
-            ::DeleteDC(hMemDC);
-            ::ReleaseDC(nullptr, hScreenDC);
-            return false;
-        }
 
         // prepare BITMAPINFO for 24bpp
         BITMAPINFO bmi{};
         bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-        bmi.bmiHeader.biWidth = w;
-        bmi.bmiHeader.biHeight = h; // positive -> bottom-up (BMP standard)
+        bmi.bmiHeader.biWidth = ctx.w;
+        bmi.bmiHeader.biHeight = ctx.h; // positive -> bottom-up (BMP standard)
         bmi.bmiHeader.biPlanes = 1;
         bmi.bmiHeader.biBitCount = 24;
         bmi.bmiHeader.biCompression = BI_RGB;
         bmi.bmiHeader.biSizeImage = 0; // can be 0 for BI_RGB
 
         // compute padded row size (each scanline padded to 4 bytes)
-        int rowSize = ((w * 3 + 3) / 4) * 4;
-        size_t pixelDataSize = static_cast<size_t>(rowSize) * static_cast<size_t>(h);
+        int rowSize = ((ctx.w * 3 + 3) / 4) * 4;
+        size_t pixelDataSize = static_cast<size_t>(rowSize) * static_cast<size_t>(ctx.h);
 
         std::vector<unsigned char> pixels;
         try {
             pixels.resize(pixelDataSize);
         } catch (...) {
-            ::SelectObject(hMemDC, oldBmp);
-            ::DeleteObject(hBitmap);
-            ::DeleteDC(hMemDC);
-            ::ReleaseDC(nullptr, hScreenDC);
             return false;
         }
 
         // retrieve bits into buffer
-        int ret = ::GetDIBits(hMemDC, hBitmap, 0, h, pixels.data(), &bmi, DIB_RGB_COLORS);
-        if (ret == 0) {
-            // cleanup
-            ::SelectObject(hMemDC, oldBmp);
-            ::DeleteObject(hBitmap);
-            ::DeleteDC(hMemDC);
-            ::ReleaseDC(nullptr, hScreenDC);
-            return false;
-        }
+        int ret = ::GetDIBits(ctx.hMemDC, ctx.hBitmap, 0, ctx.h, pixels.data(), &bmi, DIB_RGB_COLORS);
+        if (ret == 0) return false;
 
         // build BMP file header
         BITMAPFILEHEADER bfh{};
@@ -368,11 +371,62 @@ namespace win32::os {
         // copy pixel data
         memcpy(p, pixels.data(), pixelDataSize);
 
-        // cleanup GDI
-        ::SelectObject(hMemDC, oldBmp);
-        ::DeleteObject(hBitmap);
-        ::DeleteDC(hMemDC);
-        ::ReleaseDC(nullptr, hScreenDC);
+        return true;
+    }
+
+    bool capture_screen_to_clipboard() {
+        screen_capture_ctx ctx;
+        if (!ctx.valid) return false;
+
+        // prepare BITMAPINFO for 24bpp
+        BITMAPINFO bmi{};
+        bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+        bmi.bmiHeader.biWidth = ctx.w;
+        bmi.bmiHeader.biHeight = ctx.h;
+        bmi.bmiHeader.biPlanes = 1;
+        bmi.bmiHeader.biBitCount = 24;
+        bmi.bmiHeader.biCompression = BI_RGB;
+        bmi.bmiHeader.biSizeImage = 0;
+
+        int rowSize = ((ctx.w * 3 + 3) / 4) * 4;
+        size_t pixelDataSize = static_cast<size_t>(rowSize) * static_cast<size_t>(ctx.h);
+
+        // allocate global memory for CF_DIB: BITMAPINFOHEADER + pixel data
+        size_t dibSize = sizeof(BITMAPINFOHEADER) + pixelDataSize;
+        HGLOBAL hDib = ::GlobalAlloc(GMEM_MOVEABLE, dibSize);
+        if (!hDib) return false;
+
+        unsigned char* p = static_cast<unsigned char*>(::GlobalLock(hDib));
+        if (!p) {
+            ::GlobalFree(hDib);
+            return false;
+        }
+
+        memcpy(p, &bmi.bmiHeader, sizeof(BITMAPINFOHEADER));
+
+        int ret = ::GetDIBits(ctx.hMemDC, ctx.hBitmap, 0, ctx.h,
+            p + sizeof(BITMAPINFOHEADER), &bmi, DIB_RGB_COLORS);
+        ::GlobalUnlock(hDib);
+
+        if (ret == 0) {
+            ::GlobalFree(hDib);
+            return false;
+        }
+
+        if (!::OpenClipboard(nullptr)) {
+            ::GlobalFree(hDib);
+            return false;
+        }
+
+        ::EmptyClipboard();
+        HANDLE hResult = ::SetClipboardData(CF_DIB, hDib);
+        ::CloseClipboard();
+
+        if (!hResult) {
+            ::GlobalFree(hDib);
+            return false;
+        }
+        // clipboard owns hDib now
 
         return true;
     }
