@@ -284,10 +284,21 @@ namespace win32::os {
         HGDIOBJ oldBmp{nullptr};
         bool valid{false};
 
-        screen_capture_ctx() {
-            w = ::GetSystemMetrics(SM_CXSCREEN);
-            h = ::GetSystemMetrics(SM_CYSCREEN);
-            if (w <= 0 || h <= 0) return;
+        screen_capture_ctx(int src_x = 0, int src_y = 0, int src_w = 0, int src_h = 0) {
+            int screen_w = ::GetSystemMetrics(SM_CXSCREEN);
+            int screen_h = ::GetSystemMetrics(SM_CYSCREEN);
+            if (screen_w <= 0 || screen_h <= 0) return;
+
+            // use sub-region if valid, otherwise full screen
+            if (src_w > 0 && src_h > 0) {
+                w = src_w;
+                h = src_h;
+            } else {
+                src_x = 0;
+                src_y = 0;
+                w = screen_w;
+                h = screen_h;
+            }
 
             hScreenDC = ::GetDC(nullptr);
             if (!hScreenDC) return;
@@ -300,7 +311,7 @@ namespace win32::os {
 
             oldBmp = ::SelectObject(hMemDC, hBitmap);
 
-            if (::BitBlt(hMemDC, 0, 0, w, h, hScreenDC, 0, 0, SRCCOPY | CAPTUREBLT))
+            if (::BitBlt(hMemDC, 0, 0, w, h, hScreenDC, src_x, src_y, SRCCOPY | CAPTUREBLT))
                 valid = true;
         }
 
@@ -374,8 +385,8 @@ namespace win32::os {
         return true;
     }
 
-    bool capture_screen_to_clipboard() {
-        screen_capture_ctx ctx;
+    bool capture_screen_to_clipboard(int x, int y, int w, int h) {
+        screen_capture_ctx ctx{x, y, w, h};
         if (!ctx.valid) return false;
 
         // prepare BITMAPINFO for 24bpp
