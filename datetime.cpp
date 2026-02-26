@@ -1,14 +1,13 @@
 #include "datetime.h"
 #include <iomanip>
 #include <time.h>
-#include <fmt/core.h>
+#include <format>
 #include "str.h"
 
 using namespace std;
 using namespace std::chrono;
 
-namespace datetime
-{
+namespace datetime {
    std::string to_iso_8601(std::chrono::time_point<std::chrono::system_clock> t) {
       // convert to time_t which will represent the number of
       // seconds since the UNIX epoch, UTC 00:00:00 Thursday, 1st. January 1970

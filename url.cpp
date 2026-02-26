@@ -1,6 +1,6 @@
 #include "url.h"
 #include "str.h"
-#include <fmt/core.h>
+#include <format>
 
 using namespace std;
 
@@ -54,7 +54,7 @@ url::url(const std::string& abs_url) : abs_url{abs_url} {
 }
 
 std::string url::to_string() {
-    string r = fmt::format("{}://{}{}", protocol, host, query_without_parameters);
+    string r = format("{}://{}{}", protocol, host, query_without_parameters);
 
     if(!parameters.empty()) {
         r += "?";

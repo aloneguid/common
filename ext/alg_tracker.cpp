@@ -1,6 +1,6 @@
 #include "alg_tracker.h"
 #include "../str.h"
-#include "fmt/core.h"
+#include <format>
 #include "datetime.h"
 #include "../fss.h"
 
@@ -41,7 +41,7 @@ namespace alg
                 str::replace_all(value, "\\", "\\\\");
 
                 if(!body.empty()) body += ", ";
-                body += fmt::format("\"{}\": \"{}\"", pair.first, value);
+                body += std::format("\"{}\": \"{}\"", pair.first, value);
             }
         }
 
@@ -63,7 +63,7 @@ namespace alg
         }
 
         // read all file contents
-        string all_text = fss::read_file_as_string(cache_file_path);
+        string all_text = fss::read_all_text(cache_file_path);
         fss::delete_file(cache_file_path);
 
         // split by new line
