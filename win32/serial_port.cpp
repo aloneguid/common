@@ -4,7 +4,7 @@
 #include <devpkey.h>
 #include "str.h"
 #include "reg.h"
-#include "kernel.h"
+#include "win32/os.h"
 
 #pragma comment(lib, "setupapi.lib")
 
@@ -114,7 +114,7 @@ namespace win32 {
         bool ok = WriteFile(hSerial, data, size, &dwBytesWritten, nullptr);
         if(!ok) {
             // handle error
-            throw std::exception(("write failed: " + win32::kernel::get_last_error_text()).c_str());
+            throw std::exception(("write failed: " + win32::os::get_last_error_text()).c_str());
         }
         return ok;
     }
@@ -154,7 +154,7 @@ namespace win32 {
 
         hSerial = ::CreateFile(w_name.c_str(), GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr);
         if(hSerial == INVALID_HANDLE_VALUE) {
-            throw std::exception(("can't open port: " + win32::kernel::get_last_error_text()).c_str());
+            throw std::exception(("can't open port: " + win32::os::get_last_error_text()).c_str());
         } else {
             // set the COM port settings
             DCB dcbSerialParams = {0};

@@ -44,9 +44,9 @@ namespace win32::os {
 
     // clipboard
 
-    static void set_clipboard_text(const std::string& text);
+    void set_clipboard_text(const std::string& text);
 
-    static std::string get_clipboard_text();
+    std::string get_clipboard_text();
 
     // imaging
 
