@@ -2,7 +2,7 @@
 #include <vector>
 #include <iterator>
 #include "../../common/str.h"
-#include "url.h"
+#include "../url.h"
 
 #pragma comment(lib, "winhttp.lib")
 

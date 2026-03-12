@@ -2,9 +2,9 @@
 #include <initguid.h>
 #include <SetupAPI.h>
 #include <devpkey.h>
-#include "str.h"
+#include "../str.h"
 #include "reg.h"
-#include "win32/os.h"
+#include "os.h"
 
 #pragma comment(lib, "setupapi.lib")
 

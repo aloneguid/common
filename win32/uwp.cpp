@@ -4,7 +4,7 @@
 #include <windows.foundation.h>
 #include <windows.management.deployment.h>
 #include <shobjidl.h>  // For IApplicationActivationManager
-#include "str.h"
+#include "../str.h"
 
 #pragma comment(lib, "WindowsApp.lib")
 

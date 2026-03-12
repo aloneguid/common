@@ -1,5 +1,6 @@
+#if _NLOHMAN_JSON_
 #include "github.h"
-#include <fmt/core.h>
+#include <format>
 #include <nlohmann/json.hpp>
 #include "str.h"
 
@@ -9,7 +10,7 @@ using json = nlohmann::json;
 namespace ext {
 
     github_release github::get_latest_release(const std::string& author, const std::string& repo) {
-        string js = h.get(fmt::format("https://api.github.com/repos/{}/{}/releases/latest", author, repo));
+        string js = h.get(format("https://api.github.com/repos/{}/{}/releases/latest", author, repo));
 
         try {
             auto j = json::parse(js);
@@ -27,3 +28,4 @@ namespace ext {
         }
     }
 }
+#endif

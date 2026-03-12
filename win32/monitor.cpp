@@ -1,6 +1,6 @@
 #include "monitor.h"
 #include <WinUser.h>
-#include "str.h"
+#include "../str.h"
 
 using namespace std;
 

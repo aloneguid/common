@@ -1,6 +1,6 @@
 #include "perf_counter.h"
 #include <PdhMsg.h>
-#include <str.h>
+#include "../str.h"
 
 #pragma comment(lib, "pdh.lib")
 

@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 #include <Pdh.h>    // windows
-#include <fmt/core.h>
+#include <format>
 
 namespace win32 {
     class perf_counter {
@@ -10,7 +10,7 @@ namespace win32 {
         ~perf_counter();
 
         static perf_counter make_process_processor_time(std::string process_name) {
-            return perf_counter{fmt::format("\\Process({})\\% Processor Time", process_name)};
+            return perf_counter{std::format("\\Process({})\\% Processor Time", process_name)};
         }
 
         void collect_sample();

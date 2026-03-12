@@ -1,3 +1,4 @@
+#if _NLOHMAN_
 #pragma once
 #include <string>
 #include "../win32/http.h"
@@ -20,3 +21,4 @@ namespace ext {
         win32::http h;
     };
 }
+#endif

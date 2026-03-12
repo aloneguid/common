@@ -4,9 +4,8 @@
 #include <winnt.h>
 #include <winternl.h>
 #include <chrono>
-#include "kernel.h"
-#include "str.h"
-#include <fmt/core.h>
+#include "os.h"
+#include <format>
 #include <Pdh.h>
 #include <PdhMsg.h>
 
@@ -462,7 +461,7 @@ namespace win32 {
                 size_t idx = process_name.find_last_of('.');
                 if(idx != string::npos) process_name = process_name.substr(0, idx);
                 
-                auto path = str::to_wstr(fmt::format("\\Process V2({}:8520)\\% Processor Time", process_name));
+                auto path = str::to_wstr(std::format("\\Process V2({}:8520)\\% Processor Time", process_name));
                 status = ::PdhAddEnglishCounter(pdhCpuQuery, path.c_str(), NULL, &pdhCpuCounter);
                 if(status == ERROR_SUCCESS) {
                     pdhCpuInitialised = true;
