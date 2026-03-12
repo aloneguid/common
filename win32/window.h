@@ -55,7 +55,9 @@ namespace win32 {
          * @param exclude set/unset.
          * @return True if operation was successful.
          */
-        bool exclude_from_capture(bool exclude);
+        void excluded_from_capture(bool exclude);
+
+        bool excluded_from_capture();
 
     private:
         HWND hwnd;
