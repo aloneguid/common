@@ -25,6 +25,12 @@ namespace win32::os {
     */
     static double get_cpu_usage_perc();
 
+    /**
+     * @brief Gets unique machine id. Tied to OS installation ID, not hardware. Can be used to identify unique machines without using personally identifiable information. On Windows, this is retrieved from registry key HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Cryptography\MachineGuid.
+     * @return 
+     */
+    std::string machine_id();
+
     // process
 
     int create_process(const std::string& cmdline,

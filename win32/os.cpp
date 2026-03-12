@@ -1,4 +1,5 @@
 #include "os.h"
+#include "reg.h"
 #include <format>
 #include "../str.h"
 #include <Windows.h>
@@ -180,6 +181,11 @@ namespace win32::os {
             return cpuUsage;
         }
         return -1.0; // Failed to retrieve CPU usage
+    }
+
+    std::string machine_id() {
+        // KLM\SOFTWARE\Microsoft\Cryptography\MachineGuid
+        return win32::reg::get_value(win32::reg::hive::local_machine, "SOFTWARE\\Microsoft\\Cryptography", "MachineGuid");
     }
 
 
