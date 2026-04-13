@@ -31,6 +31,8 @@ namespace win32::os {
      */
     std::string machine_id();
 
+    bool is_windows11_or_greater();
+
     // process
 
     int create_process(const std::string& cmdline,

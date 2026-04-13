@@ -188,6 +188,27 @@ namespace win32::os {
         return win32::reg::get_value(win32::reg::hive::local_machine, "SOFTWARE\\Microsoft\\Cryptography", "MachineGuid");
     }
 
+    bool is_windows11_or_greater() {
+        if(!::IsWindows10OrGreater()) {
+            return false;
+        }
+
+        // classic version APIs are manifest-dependent (without proper compatibility manifest, they can lie/degrade).
+        const string build_number = win32::reg::get_value(
+            win32::reg::hive::local_machine,
+            "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion",
+            "CurrentBuildNumber");
+
+        if(build_number.empty()) {
+            return false;
+        }
+
+        try {
+            return stoi(build_number) >= 22000;
+        } catch(...) {
+            return false;
+        }
+    }
 
     string get_pressed_keys_text() {
         vector<string> pressed_keys;
