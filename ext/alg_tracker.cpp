@@ -6,8 +6,7 @@
 
 using namespace std;
 
-namespace alg
-{
+namespace alg {
     const string DomainName = "alt2.aloneguid.uk";
 
     tracker::tracker(const std::string& app_name, const std::string& version,
