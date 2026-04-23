@@ -45,5 +45,7 @@ namespace win32 {
         std::string file_open_dialog(const std::string& file_type_name, const std::string& extension);
 
         std::string file_save_dialog(const std::string& file_type_name, const std::string& extension);
+
+        void create_start_menu_shortcut(const std::string& name);
     }
 }

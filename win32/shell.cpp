@@ -3,6 +3,7 @@
 #include <shellapi.h>
 #include <filesystem>
 #include "../../common/str.h"
+#include "../../common/fss.h"
 
 #include "CDialogEventHandler.hpp"
 
@@ -363,6 +364,49 @@ namespace win32 {
             }
 
             return path;
+        }
+
+        void create_start_menu_shortcut(const string& name) {
+            PWSTR programs_path = nullptr;
+            HRESULT hr = ::SHGetKnownFolderPath(FOLDERID_Programs, KF_FLAG_CREATE, nullptr, &programs_path);
+            if(FAILED(hr) || programs_path == nullptr) {
+                return;
+            }
+
+            std::filesystem::path start_menu_programs(programs_path);
+            ::CoTaskMemFree(programs_path);
+            wstring wname = str::to_wstr(name);
+
+            std::filesystem::path shortcut_path = start_menu_programs / (wname + L".lnk");
+            std::filesystem::create_directories(shortcut_path.parent_path());
+
+            string app_path = fss::get_current_exec_path();
+            std::filesystem::path app_fs_path(app_path);
+
+            HRESULT co_hr = ::CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+            bool should_uninitialize = SUCCEEDED(co_hr);
+
+            IShellLinkW* shell_link = nullptr;
+            hr = ::CoCreateInstance(CLSID_ShellLink, nullptr, CLSCTX_INPROC_SERVER, IID_IShellLinkW, reinterpret_cast<void**>(&shell_link));
+            if(SUCCEEDED(hr) && shell_link != nullptr) {
+                shell_link->SetPath(app_fs_path.wstring().c_str());
+                shell_link->SetDescription(wname.c_str());
+                shell_link->SetIconLocation(app_fs_path.wstring().c_str(), 0);
+                shell_link->SetWorkingDirectory(app_fs_path.parent_path().wstring().c_str());
+
+                IPersistFile* persist_file = nullptr;
+                hr = shell_link->QueryInterface(IID_IPersistFile, reinterpret_cast<void**>(&persist_file));
+                if(SUCCEEDED(hr) && persist_file != nullptr) {
+                    persist_file->Save(shortcut_path.wstring().c_str(), TRUE);
+                    persist_file->Release();
+                }
+
+                shell_link->Release();
+            }
+
+            if(should_uninitialize) {
+                ::CoUninitialize();
+            }
         }
 
     }
