@@ -122,7 +122,7 @@ namespace str {
         return found_substring;
     }
 
-    std::vector<std::string> split(const std::string& str, const std::string& delimiter, bool trim_lines) {
+    std::vector<std::string> split(const std::string& str, const std::string& delimiter, bool trim_lines, bool remove_empty_entries) {
         std::vector<std::string> strings;
 
         std::string::size_type pos = 0;
@@ -130,7 +130,8 @@ namespace str {
         while ((pos = str.find(delimiter, prev)) != std::string::npos) {
             string el = str.substr(prev, pos - prev);
             if (trim_lines) trim(el);
-            strings.push_back(el);
+            if(!remove_empty_entries || !el.empty())
+                strings.push_back(el);
             prev = pos + 1;
         }
 
