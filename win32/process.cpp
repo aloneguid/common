@@ -6,6 +6,7 @@
 #include <chrono>
 #include "os.h"
 #include <format>
+#include <filesystem>
 #include <Pdh.h>
 #include <PdhMsg.h>
 
@@ -14,6 +15,7 @@
 
 #define MAX_STR 1024
 #define STATUS_INFO_LENGTH_MISMATCH ((NTSTATUS)0xC0000004L)
+#define MAX_EXTENDED_PATH 32768
 
 using namespace std;
 using namespace std::chrono;
@@ -195,18 +197,31 @@ namespace win32 {
 
     std::string process::get_module_filename() const {
 
-        string r;
-
-        HANDLE hProcess = ::OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
-        if (hProcess) {
-            WCHAR buf[MAX_STR];
-
-            if (::GetModuleFileNameEx(hProcess, NULL, buf, MAX_STR)) {
-                r = str::to_str(wstring(buf));
+        // Try the modern API first: needs only LIMITED_INFORMATION,
+        // works on elevated/protected processes, handles long paths.
+        {
+            HANDLE hProcess = ::OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
+            if(hProcess) {
+                wchar_t buf[32768];
+                DWORD len = static_cast<DWORD>(std::size(buf));
+                if(::QueryFullProcessImageNameW(hProcess, 0, buf, &len)) {
+                    ::CloseHandle(hProcess);
+                    return str::to_str(std::wstring(buf, len));
+                }
+                ::CloseHandle(hProcess);
             }
-            ::CloseHandle(hProcess);
         }
 
+        // Fall back to the older API.
+        HANDLE hProcess = ::OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pid);
+        if(!hProcess) return "";
+
+        wchar_t buf[MAX_PATH];
+        std::string r;
+        if(::GetModuleFileNameExW(hProcess, nullptr, buf, MAX_PATH)) {
+            r = str::to_str(std::wstring(buf));
+        }
+        ::CloseHandle(hProcess);
         return r;
     }
 
@@ -245,39 +260,55 @@ namespace win32 {
     }
 
     std::string process::get_description() const {
-        // Open the process to get its executable path
-        HANDLE hProcess = ::OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pid);
-        if(!hProcess) {
-            return "";
+
+        // --- 1. Get executable path ---
+        std::wstring exePath = str::to_wstr(get_module_filename());
+        if(exePath.empty()) return "";
+
+        // --- 2. Load version-info block ---
+        DWORD dummy = 0;
+        DWORD viSize = ::GetFileVersionInfoSizeW(exePath.c_str(), &dummy);
+        if(viSize == 0) return "";
+
+        std::vector<BYTE> vi(viSize);
+        if(!::GetFileVersionInfoW(exePath.c_str(), 0, viSize, vi.data())) return "";
+
+        // --- 3. Enumerate translations actually present in this binary ---
+        struct LANGANDCODEPAGE { WORD language; WORD codepage; };
+
+        LANGANDCODEPAGE* translations = nullptr;
+        UINT translationBytes = 0;
+        ::VerQueryValueW(vi.data(), L"\\VarFileInfo\\Translation",
+                         reinterpret_cast<void**>(&translations), &translationBytes);
+
+        const UINT translationCount = translationBytes / sizeof(LANGANDCODEPAGE);
+
+        auto queryDescription = [&](WORD lang, WORD cp) -> std::wstring {
+            wchar_t subBlock[64];
+            ::swprintf_s(subBlock, L"\\StringFileInfo\\%04X%04X\\FileDescription",
+                         lang, cp);
+            void* buf = nullptr;
+            UINT  sz = 0;
+            if(::VerQueryValueW(vi.data(), subBlock, &buf, &sz) && sz > 0) {
+                return std::wstring(static_cast<wchar_t*>(buf));
+            }
+            return {};
+        };
+
+        for(UINT i = 0; i < translationCount; ++i) {
+            auto desc = queryDescription(translations[i].language,
+                                         translations[i].codepage);
+            if(!desc.empty()) return str::to_str(desc);
         }
 
-        wchar_t exePath[MAX_PATH];
-        if(!::GetModuleFileNameEx(hProcess, nullptr, exePath, MAX_PATH)) {
-            CloseHandle(hProcess);
-            return "";
-        }
-
-        ::CloseHandle(hProcess);
-
-        // Get the size of the version information
-        DWORD dummy;
-        DWORD versionInfoSize = ::GetFileVersionInfoSize(exePath, &dummy);
-        if(versionInfoSize == 0) {
-            return "";
-        }
-
-        // Retrieve the version information
-        std::vector<char> versionInfo(versionInfoSize);
-        if(!::GetFileVersionInfo(exePath, 0, versionInfoSize, versionInfo.data())) {
-            return "";
-        }
-
-        // Query the "FileDescription" field
-        void* buffer = nullptr;
-        UINT size = 0;
-        if(VerQueryValue(versionInfo.data(), L"\\StringFileInfo\\040904b0\\FileDescription", &buffer, &size)) {
-            std::wstring result{static_cast<wchar_t*>(buffer)};
-            return str::to_str(result);
+        // --- 4. Try common fallback combos that some tools emit without declaring ---
+        for(auto [lang, cp] : std::initializer_list<std::pair<WORD, WORD>>{
+                {0x0409, 0x04B0},
+                {0x0409, 0x04E4},
+                {0x0000, 0x04B0},
+        }) {
+            auto desc = queryDescription(lang, cp);
+            if(!desc.empty()) return str::to_str(desc);
         }
 
         return "";
