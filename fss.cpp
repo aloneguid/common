@@ -1,6 +1,8 @@
 #include "fss.h"
 #if WIN32
 #include <Windows.h>
+#include <ShlObj_core.h>
+#include <shellapi.h>
 #else
 #include <unistd.h>
 #endif
@@ -10,9 +12,9 @@
 #include <filesystem>
 
 using namespace std;
+namespace fs = std::filesystem;
 
-namespace fss
-{
+namespace fss {
     std::string get_current_dir() {
 
 #if WIN32
@@ -26,6 +28,45 @@ namespace fss
         //getcwd()
         return "";
 #endif
+    }
+
+    std::string get_config_dir() {
+        fs::path config_path;
+
+#if defined(_WIN32)
+        // Windows: Use the Win32 API to fetch the Roaming AppData folder reliably
+        wchar_t path[MAX_PATH];
+        if (SUCCEEDED(::SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, 0, path))) {
+            config_path = fs::path(path);
+        } else {
+            // Fallback to environment variable if API fails
+            const char* appdata = std::getenv("APPDATA");
+            if (appdata) {
+                config_path = fs::path(appdata);
+            }
+        }
+
+#elif defined(__APPLE__)
+        // macOS: Use the standard Application Support directory
+        const char* home = std::getenv("HOME");
+        if (home) {
+            config_path = fs::path(home) / "Library" / "Application Support";
+        }
+
+#elif defined(__linux__) || defined(__unix__)
+        // Linux/Unix: Adhere to XDG Base Directory Specification
+        const char* xdg_config = std::getenv("XDG_CONFIG_HOME");
+        if (xdg_config && *xdg_config != '\0') {
+            config_path = fs::path(xdg_config);
+        } else {
+            const char* home = std::getenv("HOME");
+            if (home) {
+                config_path = fs::path(home) / ".config";
+            }
+        }
+#endif
+
+        return config_path.string();
     }
 
     std::string get_current_exec_path() {

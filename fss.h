@@ -2,50 +2,52 @@
 #include <string>
 
 namespace fss {
-   std::string get_current_dir();
+    std::string get_current_dir();
 
-   std::string get_current_exec_path();
+    std::string get_config_dir();
 
-   bool file_exists(const std::string& name);
+    std::string get_current_exec_path();
 
-   size_t get_file_size(const std::string& name);
+    bool file_exists(const std::string &name);
 
-   std::string get_full_path(const std::string& path);
+    size_t get_file_size(const std::string &name);
 
-   bool read_binary_file(const std::string& name, unsigned char* buffer);
+    std::string get_full_path(const std::string &path);
 
-   /**
-    * @brief Reads file as string, returns empty string on error.
-    * @param name 
-    * @return 
-    */
-   std::string read_all_text(const std::string& name);
+    bool read_binary_file(const std::string &name, unsigned char *buffer);
 
-   // renamed to above function, for consistency
-   //std::string read_file_as_string(const std::string& name) { return read_all_text(name); }
+    /**
+     * @brief Reads file as string, returns empty string on error.
+     * @param name
+     * @return
+     */
+    std::string read_all_text(const std::string &name);
 
-   /**
-    * @brief Writes all text to file, overwriting if exists.
-    * @param filename 
-    * @param contents 
-    */
-   void write_all_text(const std::string& filename, const std::string& contents);
+    // renamed to above function, for consistency
+    //std::string read_file_as_string(const std::string& name) { return read_all_text(name); }
 
-   /**
-    * @brief Writes all text to file, appending if exists.
-    * @param filename
-    * @param contents
-    */
-   void append_all_text(const std::string& filename, const std::string& contents);
+    /**
+     * @brief Writes all text to file, overwriting if exists.
+     * @param filename
+     * @param contents
+     */
+    void write_all_text(const std::string &filename, const std::string &contents);
 
-   /**
-    * @brief Calculates file age in seconds, from the creation time.
-    * @param filename 
-    * @return 
-    */
-   unsigned int get_age_in_seconds(const std::string& filename);
+    /**
+     * @brief Writes all text to file, appending if exists.
+     * @param filename
+     * @param contents
+     */
+    void append_all_text(const std::string &filename, const std::string &contents);
 
-   std::string get_temp_file_path(const std::string& prefix = "TMP");
+    /**
+     * @brief Calculates file age in seconds, from the creation time.
+     * @param filename
+     * @return
+     */
+    unsigned int get_age_in_seconds(const std::string &filename);
 
-   bool delete_file(const std::string& path);
+    std::string get_temp_file_path(const std::string &prefix = "TMP");
+
+    bool delete_file(const std::string &path);
 }
