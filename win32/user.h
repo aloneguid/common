@@ -1,10 +1,8 @@
 #pragma once
 #include <windows.h>
 #include <string>
-#include <vector>
 
-namespace win32::user
-{
+namespace win32::user {
     std::wstring load_string(HINSTANCE hInst, UINT id);
 
     std::wstring load_version(bool full = true);
@@ -12,8 +10,8 @@ namespace win32::user
     // see string_name possible values in Remarks:
     // https://docs.microsoft.com/en-us/windows/win32/api/winver/nf-winver-verqueryvaluea#remarks
     std::wstring get_file_version_info_string(
-        const std::string& module_path,
-        const std::string& string_name = "FileDescription");
+        const std::string &module_path,
+        const std::string &string_name = "FileDescription");
 
     /// <summary>
     /// Sets window position and size.
@@ -23,8 +21,11 @@ namespace win32::user
     void set_window_pos(HWND hwnd, int x, int y, int width, int height);
 
     bool is_kbd_ctrl_down();
+
     bool is_kbd_alt_down();
+
     bool is_kbd_shift_down();
+
     bool is_kbd_caps_locks_on();
 
     /**
@@ -39,5 +40,5 @@ namespace win32::user
      */
     bool is_system_light_theme();
 
-    void message_box(const std::string& caption, const std::string& text);
+    void message_box(const std::string &caption, const std::string &text);
 }
