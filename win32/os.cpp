@@ -312,19 +312,24 @@ namespace win32::os {
         bool valid{false};
 
         screen_capture_ctx(int src_x = 0, int src_y = 0, int src_w = 0, int src_h = 0) {
-            int screen_w = ::GetSystemMetrics(SM_CXSCREEN);
-            int screen_h = ::GetSystemMetrics(SM_CYSCREEN);
-            if (screen_w <= 0 || screen_h <= 0) return;
+            // get monitor closest to mouse cursor
+            POINT pt;
+            ::GetCursorPos(&pt);
+            HMONITOR hMon = ::MonitorFromPoint(pt, MONITOR_DEFAULTTONEAREST);
+
+            MONITORINFOEX mi{};
+            mi.cbSize = sizeof(mi);
+            ::GetMonitorInfo(hMon, &mi);
 
             // use sub-region if valid, otherwise full screen
             if (src_w > 0 && src_h > 0) {
                 w = src_w;
                 h = src_h;
             } else {
-                src_x = 0;
-                src_y = 0;
-                w = screen_w;
-                h = screen_h;
+                src_x = mi.rcMonitor.left;
+                src_y = mi.rcMonitor.top;
+                w = mi.rcMonitor.right - mi.rcMonitor.left;
+                h = mi.rcMonitor.bottom - mi.rcMonitor.top;
             }
 
             hScreenDC = ::GetDC(nullptr);

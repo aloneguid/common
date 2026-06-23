@@ -61,7 +61,7 @@ namespace win32::os {
     bool capture_screen(int& width, int& height, std::vector<unsigned char>& out_pixels);
 
     /**
-     * @brief Captures screen area and copies it to clipboard as bitmap.
+     * @brief Captures screen area and copies it to the clipboard as a bitmap.
      *        When x/y/w/h are all 0 (default), captures the entire screen.
      * @param x Left coordinate of the area (pixels)
      * @param y Top coordinate of the area (pixels)
