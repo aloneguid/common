@@ -21,12 +21,17 @@ namespace win32 {
         const std::string name;
         const std::string friendly_name;
         const std::string bus_description;
+        std::string last_error;
+
+        bool open();
 
         bool send(const std::string& data);
         bool send(const char* data, size_t size);
-        bool send(const std::vector<uint8_t> data);
+        bool send(std::vector<uint8_t> data);
         bool recv(std::string& data, size_t size);
-        void purge();
+        void purge() const;
+
+        operator bool() const { return check_operational(); }
 
     private:
         bool is_open{false};
@@ -36,7 +41,8 @@ namespace win32 {
         BYTE stop_bits;
         BYTE parity;
 
-        void open();
         void close();
+        bool check_operational() const;
+
     };
 }

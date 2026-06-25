@@ -15,14 +15,15 @@ namespace win32 {
     string get_device_registry_property(HDEVINFO hDevInfoSet, SP_DEVINFO_DATA* devInfo, DWORD property) {
         DWORD dwType{0};
         DWORD dwSize{0};
-        //q uery initially to get the buffer size required
+
+        //query initially to get the buffer size required
         ::SetupDiGetDeviceRegistryPropertyW(hDevInfoSet, devInfo, property, &dwType, nullptr, 0, &dwSize);
 
         std::vector<BYTE> value{dwSize, std::allocator<BYTE>{}}; //allocate buffer
         if(SetupDiGetDeviceRegistryPropertyW(hDevInfoSet, devInfo, property, &dwType, value.data(), dwSize, &dwSize)) {
             return str::to_str(reinterpret_cast<wchar_t*>(value.data()));
         }
-
+        return "";
     }
 
     std::string get_device_property(HDEVINFO hDevInfoSet, SP_DEVINFO_DATA* devInfo, const DEVPROPKEY* property_key) {
@@ -104,17 +105,17 @@ namespace win32 {
     }
 
     bool serial_port::send(const char* data, size_t size) {
-        if(!is_open) open();
-        if(!is_open) {
-            return false;
-        }
-
+        if(!is_open && !open()) return false;
         // send the data
         DWORD dwBytesWritten{0};
         bool ok = WriteFile(hSerial, data, size, &dwBytesWritten, nullptr);
         if(!ok) {
             // handle error
-            throw std::exception(("write failed: " + win32::os::get_last_error_text()).c_str());
+            last_error = "write failed: " + os::get_last_error_text();
+            if(!check_operational()) {
+                close();
+            }
+            return false;
         }
         return ok;
     }
@@ -125,24 +126,35 @@ namespace win32 {
 
     bool serial_port::recv(std::string& data, size_t size) {
 
-        if(!is_open) open();
-        if(!is_open) return false;
+        if(!is_open && !open()) return false;
 
         std::vector<char> buffer(size);
         DWORD dwBytesRead{0};
         bool ok = ReadFile(hSerial, buffer.data(), size, &dwBytesRead, nullptr);
-        if(ok) {
-            data.assign(buffer.begin(), buffer.begin() + dwBytesRead);
+        if(!ok) {
+            last_error = "read failed: " + os::get_last_error_text();
+            if(!check_operational()) {
+                close();
+            }
+            return false;
         }
-        return ok;
+        data.assign(buffer.begin(), buffer.begin() + dwBytesRead);
+        return true;
     }
 
-    void serial_port::purge() {
+    void serial_port::purge() const {
         ::PurgeComm(hSerial, PURGE_RXCLEAR);
         ::PurgeComm(hSerial, PURGE_TXCLEAR);
     }
 
-    void serial_port::open() {
+    bool serial_port::check_operational() const {
+        if(!is_open || hSerial == INVALID_HANDLE_VALUE) return false;
+        COMSTAT comStat;
+        DWORD errors;
+        return ::ClearCommError(hSerial, &errors, &comStat) != 0;
+    }
+
+    bool serial_port::open() {
 
         // "COM10" and above: Must use "\\\\.\\COM10", "\\\\.\\COM14", etc.
 
@@ -154,7 +166,8 @@ namespace win32 {
 
         hSerial = ::CreateFile(w_name.c_str(), GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr);
         if(hSerial == INVALID_HANDLE_VALUE) {
-            throw std::exception(("can't open port: " + win32::os::get_last_error_text()).c_str());
+            last_error = "can't open port: " + os::get_last_error_text();
+            return false;
         } else {
             // set the COM port settings
             DCB dcbSerialParams = {0};
@@ -177,7 +190,8 @@ namespace win32 {
             }
 
             if(hSerial == INVALID_HANDLE_VALUE) {
-                return;
+                last_error = "can't open port: " + os::get_last_error_text();
+                return false;
             }
 
             // set timeouts
@@ -200,6 +214,8 @@ namespace win32 {
 
             is_open = true;
         }
+
+        return true;
     }
 
     void serial_port::close() {
