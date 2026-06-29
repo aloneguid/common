@@ -1,6 +1,5 @@
 #include <iostream>
 #include "app_insights.h"
-#include "../win32/http.h"
 #include <fmt/core.h>
 #include "../datetime.h"
 #include "../str.h"

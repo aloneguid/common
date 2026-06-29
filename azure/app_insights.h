@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 #include <map>
-#include "../win32/http.h"
+#include "../http.h"
 
 namespace azure
 {
@@ -29,7 +29,7 @@ namespace azure
         std::string json_4;
 
         bool is_async{ false };
-        win32::http h;
+        http h;
 
         void http_post(const std::string& json_body);
 

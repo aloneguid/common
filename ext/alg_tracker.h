@@ -2,7 +2,7 @@
 #include <string>
 #include <map>
 #include <vector>
-#include "../win32/http.h"
+#include "../http.h"
 
 namespace alg
 {
@@ -19,7 +19,7 @@ namespace alg
         void flush();
 
     private:
-        win32::http h;
+        http h;
         const std::string url;
         std::string version;
         std::map<std::string, std::string> constants;
