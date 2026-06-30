@@ -1,18 +1,17 @@
 #include "hashing.h"
-#if WIN32
-#include <Windows.h>
-#include <bcrypt.h>
-#endif
+#include "platform.h"
 #include <sstream>
 #include <iomanip>
 
-#if WIN32
+#if PLATFORM_WINDOWS
+#include <Windows.h>
+#include <bcrypt.h>
 #pragma comment(lib, "bcrypt.lib")
 #endif
 
 namespace hashing {
 
-#if WIN32
+#if PLATFORM_WINDOWS
     std::string md5(const std::string& input) {
         BCRYPT_ALG_HANDLE alg = nullptr;
         BCRYPT_HASH_HANDLE hash_handle = nullptr;
@@ -54,6 +53,10 @@ namespace hashing {
         result = oss.str();
 
         return result;
+    }
+#else
+    std::string md5(const std::string& input) {
+        return "";
     }
 #endif
 }

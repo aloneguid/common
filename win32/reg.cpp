@@ -1,5 +1,4 @@
 #include "reg.h"
-#include "reg.h"
 #include <vector>
 #include "../str.h"
 
