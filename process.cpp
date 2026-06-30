@@ -435,4 +435,264 @@ double process::get_cpu_usage_percentage() {
 
 #else
 
+#include <iostream>
+#include <vector>
+#include <string>
+#include <algorithm>
+#include <fstream>
+#include <sstream>
+#include <dirent.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <sys/resource.h>
+#include <signal.h>
+#include <libgen.h>
+#include <climits>
+#include <cctype>
+#include <cstdlib>
+
+process::process() : pid{getpid()} {
+}
+
+process::~process() {
+}
+
+vector<process> process::enumerate() {
+    vector<process> r;
+    DIR* dir = opendir("/proc");
+    if (dir) {
+        struct dirent* entry;
+        while ((entry = readdir(dir)) != nullptr) {
+            if (isdigit(entry->d_name[0])) {
+                r.emplace_back(static_cast<PidType>(atoi(entry->d_name)));
+            }
+        }
+        closedir(dir);
+    }
+    return r;
+}
+
+process::PidType process::start(const std::string& cmdline, bool wait_for_exit) {
+    pid_t pid = fork();
+    if (pid == 0) {
+        // Child process
+        execl("/bin/sh", "sh", "-c", cmdline.c_str(), (char*)nullptr);
+        _exit(1);
+    } else if (pid > 0) {
+        // Parent process
+        if (wait_for_exit) {
+            int status;
+            waitpid(pid, &status, 0);
+        }
+        return pid;
+    }
+    return 0;
+}
+
+int process::exec(const std::string& cmdline, std::function<void(std::string&)> std_out_new_data) {
+    int pipefd[2];
+    if (pipe(pipefd) == -1) return -1;
+
+    pid_t pid = fork();
+    if (pid == 0) {
+        // Child process
+        close(pipefd[0]);
+        dup2(pipefd[1], STDOUT_FILENO);
+        dup2(pipefd[1], STDERR_FILENO);
+        close(pipefd[1]);
+
+        execl("/bin/sh", "sh", "-c", cmdline.c_str(), (char*)nullptr);
+        _exit(1);
+    } else if (pid > 0) {
+        // Parent process
+        close(pipefd[1]);
+        char buffer[4096];
+        ssize_t bytesRead;
+        while ((bytesRead = read(pipefd[0], buffer, sizeof(buffer) - 1)) > 0) {
+            buffer[bytesRead] = '\0';
+            string s(buffer);
+            std_out_new_data(s);
+        }
+        close(pipefd[0]);
+
+        int status;
+        waitpid(pid, &status, 0);
+        if (WIFEXITED(status)) {
+            return WEXITSTATUS(status);
+        }
+        return -1;
+    }
+    return -1;
+}
+
+int process::exec(const std::string& cmdline, string& std_out) {
+    return exec(cmdline, [&](string& token) {
+        std_out += token;
+    });
+}
+
+std::string process::get_module_filename() const {
+    char buf[PATH_MAX];
+    string path = "/proc/" + to_string(pid) + "/exe";
+    ssize_t len = readlink(path.c_str(), buf, sizeof(buf) - 1);
+    if (len != -1) {
+        buf[len] = '\0';
+        return string(buf);
+    }
+    return "";
+}
+
+std::string process::get_name() const {
+    string mfn = get_module_filename();
+    if (mfn.empty()) return "";
+    size_t idx = mfn.find_last_of('/');
+    if (idx != string::npos) {
+        return mfn.substr(idx + 1);
+    }
+    return mfn;
+}
+
+std::string process::get_description() const {
+    string path = "/proc/" + to_string(pid) + "/comm";
+    ifstream f(path);
+    string line;
+    if (getline(f, line)) {
+        return line;
+    }
+    return get_name();
+}
+
+HWND process::find_main_window() {
+    return nullptr;
+}
+
+void process::set_priority(DWORD priority_class) {
+    setpriority(PRIO_PROCESS, pid, 0);
+}
+
+bool process::enable_efficiency_mode() {
+    return setpriority(PRIO_PROCESS, pid, 19) == 0;
+}
+
+process process::get_parent() {
+    string path = "/proc/" + to_string(pid) + "/stat";
+    ifstream f(path);
+    if (!f.is_open()) return process(0);
+    string line;
+    getline(f, line);
+    size_t last_paren = line.find_last_of(')');
+    if (last_paren == string::npos) return process(0);
+    stringstream ss(line.substr(last_paren + 2));
+    char state;
+    pid_t ppid;
+    ss >> state >> ppid;
+    return process(ppid);
+}
+
+bool process::get_memory_info(uint64_t& working_set_bytes) {
+    string path = "/proc/" + to_string(pid) + "/statm";
+    ifstream f(path);
+    uint64_t size, resident;
+    if (f >> size >> resident) {
+        working_set_bytes = resident * sysconf(_SC_PAGESIZE);
+        return true;
+    }
+    return false;
+}
+
+double process::get_uptime_sec() {
+    string path = "/proc/" + to_string(pid) + "/stat";
+    ifstream f(path);
+    if (!f.is_open()) return 0;
+
+    string line;
+    getline(f, line);
+    size_t last_paren = line.find_last_of(')');
+    if (last_paren == string::npos) return 0;
+    stringstream ss(line.substr(last_paren + 2));
+    
+    char state;
+    pid_t ppid, pgrp, session, tty_nr, tpgid;
+    uint32_t flags;
+    uint64_t minflt, cminflt, majflt, cmajflt, utime, stime, cutime, cstime, priority, nice, num_threads, itrealvalue;
+    unsigned long long starttime;
+    
+    ss >> state >> ppid >> pgrp >> session >> tty_nr >> tpgid >> flags >> minflt >> cminflt >> majflt >> cmajflt >> utime >> stime >> cutime >> cstime >> priority >> nice >> num_threads >> itrealvalue >> starttime;
+
+    ifstream uptime_f("/proc/uptime");
+    double system_uptime;
+    uptime_f >> system_uptime;
+
+    long clock_ticks = sysconf(_SC_CLK_TCK);
+    double start_time_sec = (double)starttime / clock_ticks;
+
+    return system_uptime - start_time_sec;
+}
+
+bool process::terminate() {
+    return kill(pid, SIGTERM) == 0;
+}
+
+double process::get_cpu_usage_percentage() {
+    auto get_total_system_time = []() -> uint64_t {
+        ifstream f("/proc/stat");
+        string line;
+        if (!getline(f, line)) return 0;
+        stringstream ss(line);
+        string cpu;
+        ss >> cpu;
+        uint64_t user, nice, system, idle, iowait, irq, softirq, steal;
+        if (ss >> user >> nice >> system >> idle >> iowait >> irq >> softirq >> steal) {
+            return user + nice + system + idle + iowait + irq + softirq + steal;
+        }
+        return 0;
+    };
+
+    auto get_process_times = [this](uint64_t& utime, uint64_t& stime) -> bool {
+        string path = "/proc/" + to_string(pid) + "/stat";
+        ifstream f(path);
+        string line;
+        if (!getline(f, line)) return false;
+        size_t last_paren = line.find_last_of(')');
+        if (last_paren == string::npos) return false;
+        stringstream ss(line.substr(last_paren + 2));
+        char state;
+        pid_t ppid, pgrp, session, tty_nr, tpgid;
+        uint32_t flags;
+        uint64_t minflt, cminflt, majflt, cmajflt;
+        if (ss >> state >> ppid >> pgrp >> session >> tty_nr >> tpgid >> flags >> minflt >> cminflt >> majflt >> cmajflt >> utime >> stime) {
+            return true;
+        }
+        return false;
+    };
+
+    uint64_t utime = 0, stime = 0;
+    if (!get_process_times(utime, stime)) return -1.0;
+    uint64_t system_time = get_total_system_time();
+    if (system_time == 0) return -1.0;
+
+    if (!cpu_initialised) {
+        last_utime = utime;
+        last_stime = stime;
+        last_system_time = system_time;
+        cpu_initialised = true;
+        return 0.0;
+    }
+
+    double perc = 0.0;
+    if (system_time > last_system_time) {
+        uint64_t process_diff = (utime >= last_utime ? utime - last_utime : 0) + 
+                                (stime >= last_stime ? stime - last_stime : 0);
+        uint64_t system_diff = system_time - last_system_time;
+        perc = 100.0 * (double)process_diff / (double)system_diff;
+    }
+
+    last_utime = utime;
+    last_stime = stime;
+    last_system_time = system_time;
+
+    return perc;
+}
+
 #endif

@@ -3,11 +3,16 @@
 #include <string>
 #include <vector>
 #include <functional>
+#include <cstdint>
 
 #if PLATFORM_WINDOWS
 #include <Windows.h>
 #else
 #include <unistd.h>
+
+typedef void* HWND;
+typedef uint32_t DWORD;
+#define NORMAL_PRIORITY_CLASS 0
 #endif
 
 /**
@@ -106,6 +111,11 @@ private:
     bool pdhCpuInitialised{false};
     HANDLE pdhCpuQuery{nullptr};
     HANDLE pdhCpuCounter{nullptr};
+#else
+    bool cpu_initialised{false};
+    uint64_t last_utime{0};
+    uint64_t last_stime{0};
+    uint64_t last_system_time{0};
 #endif
 
 };
